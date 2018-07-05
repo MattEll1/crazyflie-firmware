@@ -81,7 +81,7 @@ static void socketlinkTask(void *param)
   {
     while (poll(&fds[0], (sizeof(fds[0]) / sizeof(fds[0])), -1) < 0){
       // Failed when no data because of EINTR caused by FreeRTOS linux port)
-      // Workaround is to put a delay for the moment
+      // For the moment Workaround is to put a delay
       vTaskDelay(M2T(1));
     }
 
@@ -119,10 +119,11 @@ static int socketlinkSendPacket(CRTPPacket *p)
   if (p->size > CRTP_MAX_DATA_SIZE)
     return 0;
 
-  dataSize = p->size + 1;
-  dataSize = sendto(fd, p->raw, dataSize, 0, (struct sockaddr *)&remaddr, addrlen);
+  dataSize = p->size + 2; // consider also the id message
+  p->id = cf_id;
+  int sentDataLength = sendto(fd, p->raw, dataSize, 0, (struct sockaddr *)&remaddr, addrlen);
   // Shutdown if not able to send ???
-  return (dataSize > 0);
+  return (sentDataLength  == dataSize);
 }
 
 static int socketlinkSetEnable(bool enable)
@@ -147,21 +148,11 @@ void socketlinkInit()
   }
   DEBUG_PRINT("Create socket succeed \n");
   
-  // Bind the UDP socket
+  // Let the OS pick this instance port and address
   memset((char *)&myaddr, 0, sizeof(myaddr));
   myaddr.sin_family = AF_INET;
-  if (strcmp(address_host, "INADDR_ANY") == 0){
-    myaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
-  } else if (inet_addr(address_host) == INADDR_NONE){
-    isInit = false;
-    return;
-  } else{
-    myaddr.sin_addr.s_addr = inet_addr(address_host); // Set the address if valid
-  }
-  myaddr.sin_port = htons(crtp_port); // Set the port
-
-  //Initialize addrlen
-  addrlen =  sizeof(remaddr);
+  myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  myaddr.sin_port = htons(0);
 
   if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0){
     isInit =false;
@@ -171,9 +162,48 @@ void socketlinkInit()
   }
   DEBUG_PRINT("Binding succeed \n");
 
+  // Initialize destination address (gazebo handler server)
+    if (strcmp(address_host, "INADDR_ANY") == 0){
+    remaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
+  } else if (inet_addr(address_host) == INADDR_NONE){
+    isInit = false;
+    return;
+  } else{
+    remaddr.sin_addr.s_addr = inet_addr(address_host); // Set the address if valid
+  }
+  remaddr.sin_port = htons(crtp_port); // Set the port
+  //Initialize addrlen
+  addrlen =  sizeof(remaddr);
+
   // initialize the poll structure
   fds[0].fd = fd;
   fds[0].events = POLLIN;
+
+  // Wait for validation by the SITL instance
+  DEBUG_PRINT("Waiting for connection with gazebo ... \n");
+  bool commInitialized = false;
+  int recvlen;
+  uint8_t count;
+  const uint8_t max_count = 10;
+
+  p.header = 0xF3;  // quad identification header
+  p.size = 0;       // No data when doing identification process
+  while(!commInitialized)
+  {
+    count = 0;
+    socketlinkSendPacket(&p);
+    while(count < max_count){
+      recvlen = recvfrom(fd, p.raw, sizeof(p.raw), 0, (struct sockaddr *)&remaddr, &addrlen);
+      if (recvlen == 2 && p.header == 0xF3){
+          commInitialized = true;
+          break;
+      }
+      count++;
+      vTaskDelay(M2T(5));
+    }
+  }
+
+  DEBUG_PRINT("Connection established with gazebo \n");
 
   // Create RX queue and start socketlink task
   crtpPacketDelivery = xQueueCreate(5, sizeof(CRTPPacket));

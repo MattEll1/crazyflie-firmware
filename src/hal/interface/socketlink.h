@@ -36,6 +36,8 @@
 uint16_t crtp_port;
 /* Store an IP address or INADDR_ANY for the server (CF) */
 char* address_host;
+/* Store the cf instance unique Identifiant */
+uint8_t cf_id;
 
 /* Initialize the socket link */
 void socketlinkInit();

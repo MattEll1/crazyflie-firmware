@@ -55,6 +55,9 @@ typedef struct _CRTPPacket
   uint8_t size;                         //< Size of data
   union {
     struct {
+#ifdef SITL_CF2
+      uint8_t id;
+#endif
       union {
         uint8_t header;                 //< Header selecting channel and port
         struct {
@@ -71,7 +74,11 @@ typedef struct _CRTPPacket
       };
       uint8_t data[CRTP_MAX_DATA_SIZE]; //< Data
     };
-    uint8_t raw[CRTP_MAX_DATA_SIZE+1];  //< The full packet "raw"
+#ifdef SITL_CF2
+    uint8_t raw[CRTP_MAX_DATA_SIZE+2];  //< The full packet "raw"
+#else
+    uint8_t raw[CRTP_MAX_DATA_SIZE+1];
+#endif
   };
 } __attribute__((packed)) CRTPPacket;
 
