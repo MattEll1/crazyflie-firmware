@@ -73,6 +73,7 @@ static struct crtpLinkOperations socketlinkOp =
 };
 
 static CRTPPacket p;
+static uint8_t socket_buff[33];
 
 static void socketlinkTask(void *param)
 {
@@ -119,8 +120,17 @@ static int socketlinkSendPacket(CRTPPacket *p)
   if (p->size > CRTP_MAX_DATA_SIZE)
     return 0;
 
+  // if ((cf_id == 4 || cf_id == 4 || cf_id == 4) && p->port == 9 && p->size == 16)
+  //   return true;
+
   dataSize = p->size + 1;
-  dataSize = sendto(fd, p->raw, dataSize, 0, (struct sockaddr *)&remaddr, addrlen);
+  memcpy(&(socket_buff[1]) , p->raw , dataSize);
+
+  dataSize = dataSize + 1;
+  socket_buff[0] = cf_id;
+
+  dataSize = sendto(fd, socket_buff, dataSize, 0, (struct sockaddr *)&remaddr, addrlen);
+  // DEBUG_PRINT("sending : %d %d \n" , p->port , p->data[0]);
   // Shutdown if not able to send ???
   return (dataSize > 0);
 }
@@ -146,22 +156,12 @@ void socketlinkInit()
     return;
   }
   DEBUG_PRINT("Create socket succeed \n");
-  
-  // Bind the UDP socket
+
+  // Let the OS pick this instance port and address
   memset((char *)&myaddr, 0, sizeof(myaddr));
   myaddr.sin_family = AF_INET;
-  if (strcmp(address_host, "INADDR_ANY") == 0){
-    myaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
-  } else if (inet_addr(address_host) == INADDR_NONE){
-    isInit = false;
-    return;
-  } else{
-    myaddr.sin_addr.s_addr = inet_addr(address_host); // Set the address if valid
-  }
-  myaddr.sin_port = htons(crtp_port); // Set the port
-
-  //Initialize addrlen
-  addrlen =  sizeof(remaddr);
+  myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  myaddr.sin_port = htons(0);
 
   if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0){
     isInit =false;
@@ -171,16 +171,56 @@ void socketlinkInit()
   }
   DEBUG_PRINT("Binding succeed \n");
 
+  // Initialize destination address (gazebo handler server)
+  if (strcmp(address_host, "INADDR_ANY") == 0){
+    remaddr.sin_addr.s_addr =  htonl(INADDR_ANY);
+  } else if (inet_addr(address_host) == INADDR_NONE){
+    isInit = false;
+    return;
+  } else{
+    remaddr.sin_addr.s_addr = inet_addr(address_host); // Set the address if valid
+  }
+  remaddr.sin_port = htons(crtp_port); // Set the port
+  //Initialize addrlen
+  addrlen =  sizeof(remaddr);
+  
   // initialize the poll structure
   fds[0].fd = fd;
   fds[0].events = POLLIN;
+
+  // Wait for validation by the SITL instance
+  DEBUG_PRINT("Waiting for connection with gazebo ... \n");
+  bool commInitialized = false;
+  int recvlen;
+  uint8_t count;
+  const uint8_t max_count = 10;
+
+  p.header = 0xF3;  // send null header for identification process
+  p.size = 0;       // No data when doing identification process
+  while(!commInitialized)
+  {
+    count = 0;
+    socketlinkSendPacket(&p);
+    while(count < max_count){
+      recvlen = recvfrom(fd, socket_buff, sizeof(socket_buff), 0, (struct sockaddr *)&remaddr, &addrlen);
+      if (recvlen == 2 && socket_buff[1] == 0xF3 && socket_buff[0] == cf_id){
+          commInitialized = true;
+          break;
+      }
+      count++;
+      vTaskDelay(M2T(10));
+    }
+  }
+
+  DEBUG_PRINT("Connection established with gazebo \n");
+  
 
   // Create RX queue and start socketlink task
   crtpPacketDelivery = xQueueCreate(5, sizeof(CRTPPacket));
   DEBUG_QUEUE_MONITOR_REGISTER(crtpPacketDelivery);
 
   xTaskCreate(socketlinkTask, USBLINK_TASK_NAME,
-              USBLINK_TASK_STACKSIZE, NULL, USBLINK_TASK_PRI, NULL);
+              USBLINK_TASK_STACKSIZE, NULL, USBLINK_TASK_PRI-1, NULL);
 
   isInit = true;
 }

@@ -28,6 +28,7 @@
 #include "crtp.h"
 
 #include "console.h"
+#include <string.h>
 
 static struct {
   uint32_t m1;
@@ -37,12 +38,15 @@ static struct {
 } __attribute__((packed)) motorPower;
 
 static uint32_t lastSentTime = 0;
+static CRTPPacket p;
 
 static void motorsSetRatios(const uint8_t *powerVal);
 
 void powerDistributionInit(void)
 {
   lastSentTime = xTaskGetTickCount();
+  p.size = 4 * sizeof(uint32_t);
+  p.header = CRTP_HEADER(CRTP_PORT_SETPOINT_SIM, 0);
   // Should already be initialized by the sensor task
   // crtpInitTaskQueue(CRTP_PORT_SETPOINT_SIM);
 }
@@ -83,21 +87,20 @@ void powerDistribution(const control_t *control)
   motorPower.m4 =  limitThrust(control->thrust + control->roll -
    control->yaw);
   #endif
-
-  if (xTaskGetTickCount() - lastSentTime > M2T(1)){
+  
+  if (xTaskGetTickCount() - lastSentTime >= M2T(2)){
     motorsSetRatios((uint8_t *) &motorPower);
     lastSentTime = xTaskGetTickCount();
   }
+  // motorsSetRatios((uint8_t *) &motorPower);
 }
 
 static void motorsSetRatios(const uint8_t *powerVal){
-  CRTPPacket p;
-  p.size = 4 * sizeof(uint32_t);
-  p.header = CRTP_HEADER(CRTP_PORT_SETPOINT_SIM, 0);
-  uint8_t incr;
-  for (incr = 0 ; incr < p.size ; incr++){
-    p.data[incr] = powerVal[incr];
-  }
+  // uint8_t incr;
+  // for (incr = 0 ; incr < p.size ; incr++){
+  //   p.data[incr] = powerVal[incr];
+  // }
+  memcpy(p.data , powerVal , p.size);
   crtpSendPacket(&p);
   // consolePrintf("%d , %d , %d , %d  \n", (int) motorPower.m1 , (int) motorPower.m2 , (int) motorPower.m3 , (int) motorPower.m4 );
 }
