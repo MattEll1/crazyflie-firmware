@@ -25,6 +25,7 @@ PLATFORM          ?= cf2
 LPS_TDMA_ENABLE   ?= 0
 LPS_TDOA_ENABLE   ?= 0
 LPS_TDOA3_ENABLE  ?= 0
+BUILD_VERIF       ?= 0
 
 
 # Platform configuration handling
@@ -42,6 +43,7 @@ RTOS_DEBUG        ?= 0
 
 LIB = src/lib
 FREERTOS = src/lib/FreeRTOS
+VERIF = src/outer_ode
 
 
 ############### CPU-specific build configuration ################
@@ -72,9 +74,11 @@ ST_OBJ += usbd_ioreq.o usbd_req.o usbd_core.o
 
 PROCESSOR = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -D__TARGET_FPU_VFP
+CXXFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -D__TARGET_FPU_VFP
 
 #Flags required by the ST library
 CFLAGS += -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER
+CXXFLAGS += -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER
 
 LOAD_ADDRESS_stm32f4 = 0x8000000
 LOAD_ADDRESS_CLOAD_stm32f4 = 0x8004000
@@ -103,16 +107,21 @@ PROJ_OBJ += diskio.o ff.o syscall.o unicode.o fatfs_sd.o
 ifeq ($(FATFS_DISKIO_TESTS), 1)
 PROJ_OBJ += diskio_function_tests.o
 CFLAGS += -DUSD_RUN_DISKIO_FUNCTION_TESTS
+CXXFLAGS += -DUSD_RUN_DISKIO_FUNCTION_TESTS
 endif
 
 # Crazyflie sources
-VPATH += src/init src/hal/src src/modules/src src/utils/src src/drivers/bosch/src src/drivers/src src/platform
+VPATH += src/init src/hal/src src/modules/src src/utils/src src/drivers/bosch/src src/drivers/src src/platform src/outer_ode/src
 
 
 ############### Source files configuration ################
 
 # Init
-PROJ_OBJ += main.o
+ifeq ($(BUILD_VERIF), 1)
+	PROJ_OBJ += main_verif.o
+else
+	PROJ_OBJ += main.o
+endif
 PROJ_OBJ += platform.o platform_utils.o platform_$(PLATFORM).o platform_$(CPU).o
 
 # Drivers
@@ -189,25 +198,38 @@ PROJ_OBJ += oa.o
 PROJ_OBJ += multiranger.o
 PROJ_OBJ += lighthouse.o
 
+VERIF_OBJ = aa_mod.o interval.o ode_integr.o outer_task.o
+
 ifeq ($(LPS_TDOA_ENABLE), 1)
 CFLAGS += -DLPS_TDOA_ENABLE
+CXXFLAGS += -DLPS_TDOA_ENABLE
 endif
 
 ifeq ($(LPS_TDOA3_ENABLE), 1)
 CFLAGS += -DLPS_TDOA3_ENABLE
+CXXFLAGS += -DLPS_TDOA3_ENABLE
 endif
 
 ifeq ($(LPS_TDMA_ENABLE), 1)
 CFLAGS += -DLPS_TDMA_ENABLE
+CXXFLAGS += -DLPS_TDMA_ENABLE
 endif
+
+CXXFLAGS += -DENABLE_VERIF 
+N_STATE = 11
+N_NOISE = 14
+T_ORDER = 3
+CXXFLAGS += -DTIME_STEP_VAR -DUSE_MAF2 -DN_STATE=${N_STATE} -DN_NOISE=${N_NOISE} -DT_ORDER=${T_ORDER} -DSTM32F4XX
 
 ifdef SENSORS
 SENSORS_UPPER = $(shell echo $(SENSORS) | tr a-z A-Z)
 CFLAGS += -DSENSORS_FORCE=SensorImplementation_$(SENSORS)
+CXXFLAGS += -DSENSORS_FORCE=SensorImplementation_$(SENSORS)
 
 # Add sensor file to the build if needed
 ifeq (,$(findstring DSENSOR_INCLUDED_$(SENSORS_UPPER),$(CFLAGS)))
 CFLAGS += -DSENSOR_INCLUDED_$(SENSORS_UPPER)
+CXXFLAGS += -DSENSOR_INCLUDED_$(SENSORS_UPPER)
 PROJ_OBJ += sensors_$(SENSORS).o
 endif
 endif
@@ -229,12 +251,14 @@ PROJ_OBJ += pulse_processor.o lighthouse_geometry.o
 # Libs
 PROJ_OBJ += libarm_math.a
 
-OBJ = $(FREERTOS_OBJ) $(PORT_OBJ) $(ST_OBJ) $(PROJ_OBJ) $(CRT0)
+OBJ = $(FREERTOS_OBJ) $(PORT_OBJ) $(ST_OBJ) $(PROJ_OBJ) $(CRT0) $(VERIF_OBJ)
 
 ############### Compilation configuration ################
 AS = $(CROSS_COMPILE)as
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)gcc
+CCXX = $(CROSS_COMPILE)g++
+LDXX = $(CROSS_COMPILE)g++
 SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB = $(CROSS_COMPILE)gdb
@@ -256,32 +280,42 @@ INCLUDES += -Ivendor/libdw1000/inc
 INCLUDES += -I$(LIB)/FatFS
 INCLUDES += -I$(LIB)/vl53l1
 INCLUDES += -I$(LIB)/vl53l1/core/inc
+INCLUDES += -I$(VERIF)/interface
 
 ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -g3 -DDEBUG
+  CXXFLAGS += -O0 -g3 -DDEBUG
   # Prevent silent errors when converting between types (requires explicit casting)
   CFLAGS += -Wconversion
+  CXXFLAGS += -Wconversion
 else
 	# Fail on warnings
   CFLAGS += -Os -g3 -Werror
+  CXXFLAGS += -Os -g3 -Werror
 endif
 
 ifeq ($(LTO), 1)
   CFLAGS += -flto
+  CXXFLAGS += -flto
 endif
 
 CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
+CXXFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
 
 CFLAGS += $(PROCESSOR) $(INCLUDES)
-
+CXXFLAGS += $(PROCESSOR) $(INCLUDES)
 
 CFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing $(C_PROFILE) -std=gnu11
+CXXFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing
 # Compiler flags to generate dependency files:
 CFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
+CXXFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
 #Permits to remove un-used functions and global variables from output file
 CFLAGS += -ffunction-sections -fdata-sections
+CXXFLAGS += -ffunction-sections -fdata-sections
 # Prevent promoting floats to doubles
 CFLAGS += -Wdouble-promotion
+CXXFLAGS += -Wdouble-promotion
 
 
 ASFLAGS = $(PROCESSOR) $(INCLUDES)

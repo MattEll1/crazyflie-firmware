@@ -137,7 +137,7 @@ void verifTaskInit()
 	idRint = logGetVarId("pid_rate","yaw_outI");
 	idZint = logGetVarId("posCtl","VZi");
 
-	DEBUG_PRINT("Got Variable ID succeed \n");
+	//DEBUG_PRINT("Got Variable ID succeed \n");
 
 	// commented block below is related to the commented lines marked with #$ TODO
 	//for(uint8_t i= 0 ; i<N_STATE ; i++){

@@ -26,6 +26,12 @@ CC_COMMAND_SILENT="  CC    $@"
 	@$(if $(QUIET), ,echo $(CC_COMMAND$(VERBOSE)) )
 	@$(CC_COMMAND)
 
+CCXX_COMMAND=$(CCXX) $(CXXFLAGS) -c $< -o $(BIN)/$@
+CCXX_COMMAND_SILENT="  CCXX    $@"
+.cpp.o:
+	@$(if $(QUIET), ,echo $(CCXX_COMMAND$(VERBOSE)) )
+	@$(CCXX_COMMAND)
+
 CCS_COMMAND=$(CC) $(CSFLAGS) -c $< -o $(BIN)/$@
 CCS_COMMAND_SILENT="  CCS   $@"
 .S.o:
