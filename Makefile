@@ -198,7 +198,7 @@ PROJ_OBJ += oa.o
 PROJ_OBJ += multiranger.o
 PROJ_OBJ += lighthouse.o
 
-VERIF_OBJ = aa_mod.o interval.o ode_integr.o outer_task.o
+VERIF_OBJ = aa_mod.o interval.o ode_integr_emb.o outer_task.o
 
 ifeq ($(LPS_TDOA_ENABLE), 1)
 CFLAGS += -DLPS_TDOA_ENABLE
@@ -256,9 +256,12 @@ OBJ = $(FREERTOS_OBJ) $(PORT_OBJ) $(ST_OBJ) $(PROJ_OBJ) $(CRT0) $(VERIF_OBJ)
 ############### Compilation configuration ################
 AS = $(CROSS_COMPILE)as
 CC = $(CROSS_COMPILE)gcc
-LD = $(CROSS_COMPILE)gcc
+ifeq ($(BUILD_VERIF), 1)
+	LD = $(CROSS_COMPILE)g++
+else
+	LD = $(CROSS_COMPILE)gcc
+endif
 CCXX = $(CROSS_COMPILE)g++
-LDXX = $(CROSS_COMPILE)g++
 SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB = $(CROSS_COMPILE)gdb
@@ -319,7 +322,7 @@ CXXFLAGS += -Wdouble-promotion
 
 
 ASFLAGS = $(PROCESSOR) $(INCLUDES)
-LDFLAGS = --specs=nosys.specs --specs=nano.specs $(PROCESSOR) -Wl,-Map=$(PROG).map,--cref,--gc-sections,--undefined=uxTopUsedPriority 
+LDFLAGS = --specs=nosys.specs --specs=nano.specs $(PROCESSOR) -Wl,-Map=$(PROG).map,--cref,--gc-sections,--undefined=uxTopUsedPriority #-lstdc++
 
 #Flags required by the ST library
 ifeq ($(CLOAD), 1)
