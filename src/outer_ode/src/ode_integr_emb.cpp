@@ -20,7 +20,6 @@ void TM_val::buildAndEval()
     // std::cout << "+++" << std::endl;
     // Use fixpoint iteration to get the step size and the remainder
 	real new_curr_tau = fixpoint();
-	
     // Save f(rough enclosure)
     AF1 frough[N_STATE];
     this->m_f->operator () (frough , this->y0_temp);

@@ -45,7 +45,7 @@ set(CONTROLLER
 if(BUILD_VERIF)
 
   set(N_STATE 11)
-  set(N_NOISE 14)
+  set(N_NOISE 15)
   set(T_ORDER 3) 
 
   set(EXTRA_ARGS_VER
@@ -59,7 +59,7 @@ if(BUILD_VERIF)
   set(SRC_VERIF
     ${CF2_SITL_SRCS_DIR}/outer_ode/src/interval.cpp
     ${CF2_SITL_SRCS_DIR}/outer_ode/src/aa_mod.cpp
-    ${CF2_SITL_SRCS_DIR}/outer_ode/src/ode_integr.cpp
+    ${CF2_SITL_SRCS_DIR}/outer_ode/src/ode_integr_emb.cpp
     ${CF2_SITL_SRCS_DIR}/outer_ode/src/outer_task.cpp
   )
 endif(BUILD_VERIF)

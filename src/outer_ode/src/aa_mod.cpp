@@ -83,14 +83,14 @@ MAF2 & MAF2::operator = (const MAF2 &af)
 
 real & MAF2::operator[](uint16_t index) 
 {
-	//assert_af(index>=0 && index < this->nbIndexes); //#$TODO find a way to propagate error, instead of killing the prrogram
+	assert_af(index>=0 && index < this->nbIndexes); //#$TODO find a way to propagate error, instead of killing the prrogram
 	//(which is working neither)
 	return this->deviations[index];
 }
 
 real MAF2::operator[](uint16_t index) const
 {
-	//assert_af(index>=0 && index < this->nbIndexes); //#$TODO find a way to propagate error, instead of killing the prrogram
+	assert_af(index>=0 && index < this->nbIndexes); //#$TODO find a way to propagate error, instead of killing the prrogram
 	//(which is working neither
 	return this->deviations[index];
 }
@@ -485,7 +485,7 @@ MAF2 & MAF2::operator *= (const real val)
 
 MAF2 MAF2::operator / (const real val) const
 {
-	//assert_af(val != 0); //#$TODO find a way to propagate error, instead of killing the prrogram
+	assert_af(val != 0); //#$TODO find a way to propagate error, instead of killing the prrogram
 	//(which is working neither
 
 	MAF2 temp(*this);
@@ -1186,7 +1186,7 @@ MAF2 inv(const MAF2 &other)
 	real fa , fb;
 	real alpha ,dzeta , delta;
 
-	//assert_af(a*b > 0.0f); //#$TODO find a way to propagate error, instead of killing the prrogram
+	assert_af(a*b > 0.0f); //#$TODO find a way to propagate error, instead of killing the prrogram
 	//(which is working neither
 
 	fa = 1/a;
@@ -1389,7 +1389,7 @@ MAF2 tan(const MAF2 &other)
 		b = a + 2*r;
 	}
 
-	//assert_af(! ( (a <= M_PI_VER/2 && b >= M_PI_VER/2 ) || (a <= -M_PI_VER/2 && b >= -M_PI_VER/2 ) )); //#$TODO find a way to propagate error, instead of killing the prrogram
+	assert_af(! ( (a <= M_PI_VER/2 && b >= M_PI_VER/2 ) || (a <= -M_PI_VER/2 && b >= -M_PI_VER/2 ) )); //#$TODO find a way to propagate error, instead of killing the prrogram
 	//(which is working neither
 
 	real fa , fb;

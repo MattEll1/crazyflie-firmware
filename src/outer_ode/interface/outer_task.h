@@ -17,18 +17,18 @@ extern "C"
 }
 
 #ifndef STM32F4XX
-	#include "ode_integr.h"
+	#include "ode_integr_emb.h" //#$TODO replace by "ode_integr.h" after having tested SITL
 #else
 	#include "ode_integr_emb.h"
 #endif
 
 //#define Z_LOG_FILE "zlog.txt"
 
-#define INTEG_DURATION  0.4f
-#define RPY_INCERTAINCY 0.0f // Interval(-1,1)
-#define PQR_INCERTAINCY	Interval(-0.02 , 0.02)
+#define INTEG_DURATION  0.11f //0.4
+#define RPY_INCERTAINCY 0.0f // Interval(-1.1)
+#define PQR_INCERTAINCY	Interval(-0.001 , 0.001) //-0.02 , 0.02
 #define UVW_INCERTAINCY	0.0f // Interval(-0.05 , 0.05)
-#define Z_INCERTAINCY	Interval(-0.1 , 0.1)
+#define Z_INCERTAINCY	Interval(-0.01 , 0.01) //-0.1 , 0.1
 
 void verifTaskInit();
 

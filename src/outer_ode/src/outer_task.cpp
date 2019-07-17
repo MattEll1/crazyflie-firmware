@@ -14,6 +14,17 @@ static OdeFunc my_dyn;
 
 static bool isInit = false;
 
+static uint32_t t0_temp;
+static float z0Min_temp;
+static float z0Max_temp;
+
+static uint32_t t0;
+static float z0Min;
+static float z0Max;
+static float zfMin;
+static float zfMax;
+
+
 //#$ TODO uncomment if using in sitl. For hitl, one should send the data via radio
 //static FILE* zlogfile[N_STATE];
 
@@ -37,6 +48,8 @@ static void verifTask(void* params)
   	}
 
   	vTaskDelay(M2T(10000));
+
+  	DEBUG_PRINT("##EnteringVerifLoop\n");
 
 	// Start the verification main routine
 	while(1)
@@ -82,7 +95,7 @@ static void verifTask(void* params)
 		my_dyn.params[1] = -logGetFloat(idQsp) * (M_PI_VER/180);
 		my_dyn.params[2] = logGetFloat(idRsp) * (M_PI_VER/180);
 		my_dyn.params[3] = logGetFloat(idZsp);
-
+  
 		currentTime = xTaskGetTickCount()/1000.0f;
 		// commented block below is related to the commented lines marked with #$ TODO
 		//for(uint8_t i= 0 ; i<N_STATE ; i++){
@@ -104,7 +117,6 @@ static void verifTask(void* params)
 		start_verif();
 		vTaskDelay(M2T(200));
 		// Apply a correction in case of problem founded
-
 	}
 }
 
@@ -161,8 +173,12 @@ bool verifTaskTest(void)
 static void start_verif()
 {
 	TM_val tm_val(x0, 0, &my_dyn);
-	Interval curr_Z;
+	t0_temp = xTaskGetTickCount();
+	z0Min_temp = x0[9].getMin();
+	z0Max_temp = x0[9].getMax();
+	
 	while (tm_val.tn <= INTEG_DURATION){
+		//DEBUG_PRINT("tn = %f", (double) tm_val.tn);
 		tm_val.buildAndEval();
 		// commented block below is related to the commented lines marked with #$ TODO
 		//for(uint8_t i= 0 ; i<N_STATE ; i++){
@@ -178,7 +194,22 @@ static void start_verif()
 			DEBUG_PRINT("x[%d] : [%f , %f ] \n", (int) i , (double) temp.getMin(), (double) temp.getMax());
 		}
 */
-	}
+	}	
+	t0 = t0_temp;
+	z0Min = z0Min_temp;
+	z0Max = z0Max_temp;
+	zfMin = x0[9].getMin();
+	zfMax = x0[9].getMax();
 		// Interval temp = x0[9].getInterval();
 		// DEBUG_PRINT("x[%d] : [%f , %f ] \n", (int) 9 , (double) temp.getMin(), (double) temp.getMax());
 }
+
+
+// LOG_GROUP_START2(verif)
+// LOG_ADD(LOG_FLOAT, t0, &t0)
+// //LOG_ADD(LOG_FLOAT, tf, &tf)
+// LOG_ADD(LOG_UINT32, z0Min, &z0Min)
+// LOG_ADD(LOG_FLOAT, z0Max, &z0Max)
+// LOG_ADD(LOG_FLOAT, zfMin, &zfMin)
+// LOG_ADD(LOG_FLOAT, zfMax, &z0Max)
+// LOG_GROUP_STOP2(verif)
