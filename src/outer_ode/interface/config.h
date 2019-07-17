@@ -12,7 +12,7 @@
 #endif
 
 // check if compilation is done for microcontroller -> chose your custom assert function
-#ifndef USE_MCU
+#ifndef STM32F4XX
 	#include <assert.h>
 	#define assert_af(e) assert(e)
 #else

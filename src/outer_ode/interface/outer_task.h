@@ -16,7 +16,11 @@ extern "C"
 	#include "sensors.h"
 }
 
-#include "ode_integr.h"
+#ifndef STM32F4XX
+	#include "ode_integr.h"
+#else
+	#include "ode_integr_emb.h"
+#endif
 
 //#define Z_LOG_FILE "zlog.txt"
 

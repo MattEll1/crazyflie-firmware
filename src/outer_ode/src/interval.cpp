@@ -11,7 +11,8 @@ Interval::Interval(real val)
 
 Interval::Interval(real lo , real hi)
 {
-	assert_af(lo <= hi);
+	//assert_af(lo <= hi); //#$TODO find a way to propagate error, instead of killing the prrogram
+	//(which is working neither
 	this->l_elem = lo;
 	this->r_elem = hi;
 }
@@ -82,7 +83,8 @@ Interval Interval::operator * (const Interval &it) const
 
 Interval Interval::operator / (const Interval &it) const
 {
-	assert_af(it.l_elem * it.r_elem > 0);
+	//assert_af(it.l_elem * it.r_elem > 0); //#$TODO find a way to propagate error, instead of killing the prrogram
+	//(which is working neither
 	return *this * Interval(1.0f/it.r_elem , 1.0f/it.l_elem);
 }
 
@@ -113,7 +115,8 @@ Interval & Interval::operator *= (const Interval &it)
 
 Interval & Interval::operator /= (const Interval &it)
 {
-	assert_af(it.l_elem * it.r_elem > 0);
+	//assert_af(it.l_elem * it.r_elem > 0); //#$TODO find a way to propagate error, instead of killing the prrogram
+	//(which is working neither
 	real x1 = this->l_elem / it.r_elem;
 	real x2 = this->l_elem / it.l_elem;
 	real x3 = this->r_elem / it.r_elem;
