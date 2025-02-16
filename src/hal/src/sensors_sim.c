@@ -245,6 +245,10 @@ void processAccGyroMeasurements(const uint8_t *buffer)
   //(real value in deg / SENSORS_DEG_PER_LSB_CFG) from gazebo SIM
   const Axis3i16 *gyroData = (Axis3i16 *) (buffer + sizeof(Axis3i16));
 
+  //Debugging:
+  // DEBUG_PRINT("Received IMU data: acc[%d,%d,%d] gyro[%d,%d,%d]\n", 
+  //   accData->x, accData->y, accData->z, 
+  //   gyroData->x, gyroData->y, gyroData->z);
 
 #ifdef GYRO_BIAS_LIGHT_WEIGHT
   gyroBiasFound = processGyroBiasNoBuffer(gyroData->x, gyroData->y, gyroData->z, &gyroBias);

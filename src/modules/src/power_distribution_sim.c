@@ -29,6 +29,7 @@
 
 #include "console.h"
 #include <string.h>
+#include "debug.h"
 
 static struct {
   uint32_t m1;
@@ -87,6 +88,8 @@ void powerDistribution(const control_t *control)
   motorPower.m4 =  limitThrust(control->thrust + control->roll -
    control->yaw);
   #endif
+  // DEBUG_PRINT("Motors: M1:%lu M2:%lu M3:%lu M4:%lu\n", 
+  //   motorPower.m1, motorPower.m2, motorPower.m3, motorPower.m4);
   
   if (xTaskGetTickCount() - lastSentTime >= M2T(2)){
     motorsSetRatio((uint8_t *) &motorPower);

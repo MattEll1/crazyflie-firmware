@@ -35,11 +35,17 @@
 
 static platformConfig_t configs[] = {
   {
-    .deviceType = "CF20",
-    .deviceTypeName = "Crazyflie 2.0",
+    .deviceType = "CF21",
+    .deviceTypeName = "Crazyflie 2.1",
     .sensorImplementation = SensorImplementation_sim,
     .physicalLayoutAntennasAreClose = true,
   }
+  // {
+  //   .deviceType = "CF21",
+  //   .deviceTypeName = "Crazyflie 2.1",
+  //   .sensorImplementation = SensorImplementation_sim,
+  //   .physicalLayoutAntennasAreClose = true,
+  // }
 };
 
 const platformConfig_t* platformGetListOfConfigurations(int* nrOfConfigs) {
