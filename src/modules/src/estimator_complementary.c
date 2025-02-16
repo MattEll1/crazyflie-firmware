@@ -4,6 +4,7 @@
 #include "sensfusion6.h"
 #include "position_estimator.h"
 #include "sensors.h"
+#include "debug.h"
 
 #define ATTITUDE_UPDATE_RATE RATE_250_HZ
 #define ATTITUDE_UPDATE_DT 1.0/ATTITUDE_UPDATE_RATE
@@ -35,6 +36,10 @@ void estimatorComplementary(state_t *state, sensorData_t *sensorData, control_t 
 
     // Save attitude, adjusted for the legacy CF2 body coordinate system
     sensfusion6GetEulerRPY(&state->attitude.roll, &state->attitude.pitch, &state->attitude.yaw);
+
+    //
+    // DEBUG_PRINT("State Est: roll:%f pitch:%f yaw:%f\n", 
+    //   (double)state->attitude.roll, (double)state->attitude.pitch, (double)state->attitude.yaw);
 
     // Save quaternion, hopefully one day this could be used in a better controller.
     // Note that this is not adjusted for the legacy coordinate system

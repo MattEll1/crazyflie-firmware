@@ -216,13 +216,17 @@ void ws2812DmaIsr(void)
     if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_HTIF5))
     {
       DMA_ClearITPendingBit(DMA1_Stream5, DMA_IT_HTIF5);
-      buffer = led_dma.begin;
+      uint16_t aligned_begin;
+      memcpy(&aligned_begin, &led_dma.begin, sizeof(aligned_begin));
+      buffer = &aligned_begin;
     }
 
     if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_TCIF5))
     {
       DMA_ClearITPendingBit(DMA1_Stream5, DMA_IT_TCIF5);
-      buffer = led_dma.end;
+      uint16_t aligned_end;
+      memcpy(&aligned_end, &led_dma.end, sizeof(aligned_end));
+      buffer = &aligned_end;
     }
 
     for(i=0; (i<LED_PER_HALF) && (current_led<total_led+2); i++, current_led++) {

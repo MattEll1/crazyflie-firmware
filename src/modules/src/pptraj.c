@@ -38,8 +38,12 @@ See Daniel Mellinger, Vijay Kumar: "Minimum snap trajectory generation and contr
 */
 
 #include "pptraj.h"
+#include <string.h>
 
 #define GRAV (9.81f)
+#define POLY5_COEFFS 6
+#define POLY7_COEFFS 8 
+#define POLY_LINEAR_COEFFS 2
 
 static struct poly4d poly4d_tmp;
 
@@ -159,19 +163,24 @@ struct poly4d poly4d_linear(float duration, struct vec p0, struct vec p1, float 
 {
 	struct poly4d p;
 	p.duration = duration;
-	polylinear(p.p[0], duration, p0.x, p1.x);
-	polylinear(p.p[1], duration, p0.y, p1.y);
-	polylinear(p.p[2], duration, p0.z, p1.z);
-	polylinear(p.p[3], duration, yaw0, yaw1);
+	float aligned_p[4][POLY_LINEAR_COEFFS];
+
+	polylinear(aligned_p[0], duration, p0.x, p1.x);
+	polylinear(aligned_p[1], duration, p0.y, p1.y);
+	polylinear(aligned_p[2], duration, p0.z, p1.z);
+	polylinear(aligned_p[3], duration, yaw0, yaw1);
+	memcpy(p.p, aligned_p, sizeof(aligned_p));
 	return p;
 }
 
 void poly4d_scale(struct poly4d *p, float x, float y, float z, float yaw)
 {
-	polyscale(p->p[0], x);
-	polyscale(p->p[1], y);
-	polyscale(p->p[2], z);
-	polyscale(p->p[3], yaw);
+	float* aligned_p[4];
+	memcpy(aligned_p, p->p, sizeof(aligned_p));
+	polyscale(aligned_p[0], x);
+    polyscale(aligned_p[1], y);
+    polyscale(aligned_p[2], z);
+    polyscale(aligned_p[3], yaw);
 }
 
 void poly4d_shift(struct poly4d *p, float x, float y, float z, float yaw)
@@ -184,27 +193,37 @@ void poly4d_shift(struct poly4d *p, float x, float y, float z, float yaw)
 
 void poly4d_stretchtime(struct poly4d *p, float s)
 {
+	float* aligned_p[4]; 
+	memcpy(aligned_p, p->p, sizeof(aligned_p));
+
 	for (int i = 0; i < 4; ++i) {
-		polystretchtime(p->p[i], s);
+		polystretchtime(aligned_p[i], s);
 	}
 	p->duration *= s;
 }
 
 void polyder4d(struct poly4d *p)
 {
+	float* aligned_p[4];
+	memcpy(aligned_p, p->p, sizeof(aligned_p));
+
 	for (int i = 0; i < 4; ++i) {
-		polyder(p->p[i]);
+		polyder(aligned_p[i]);
 	}
 }
 
 static struct vec polyval_xyz(struct poly4d const *p, float t)
 {
-	return mkvec(polyval(p->p[0], t), polyval(p->p[1], t), polyval(p->p[2], t));
+	float* aligned_p[4];
+	memcpy(aligned_p, p->p, sizeof(aligned_p));
+	return mkvec(polyval(aligned_p[0], t), polyval(aligned_p[1], t), polyval(aligned_p[2], t));
 }
 
 static float polyval_yaw(struct poly4d const *p, float t)
 {
-	return polyval(p->p[3], t);
+	float* aligned_p[4];
+	memcpy(aligned_p, p->p, sizeof(aligned_p));
+	return polyval(aligned_p[3], t);
 }
 
 // compute loose maximum of acceleration -
@@ -323,7 +342,10 @@ struct traj_eval piecewise_eval_reversed(
 			poly4d_shift(&poly4d_tmp, traj->shift.x, traj->shift.y, traj->shift.z, 0);
 			poly4d_stretchtime(&poly4d_tmp, traj->timescale);
 			for (int i = 0; i < 4; ++i) {
-				polyreflect(poly4d_tmp.p[i]);
+				float aligned_p[4];
+				memcpy(aligned_p, poly4d_tmp.p[i], sizeof(aligned_p));
+				//polyreflect(poly4d_tmp.p[i]);
+				polyreflect(aligned_p);
 			}
 			t = t - piece->duration * traj->timescale;
 			return poly4d_eval(&poly4d_tmp, t);
@@ -341,7 +363,6 @@ struct traj_eval piecewise_eval_reversed(
 	return ev;
 }
 
-
 // y, dy == yaw, derivative of yaw
 void piecewise_plan_5th_order(struct piecewise_traj *pp, float duration,
 	struct vec p0, float y0, struct vec v0, float dy0, struct vec a0,
@@ -352,10 +373,31 @@ void piecewise_plan_5th_order(struct piecewise_traj *pp, float duration,
 	pp->timescale = 1.0;
 	pp->shift = vzero();
 	pp->n_pieces = 1;
-	poly5(p->p[0], duration, p0.x, v0.x, a0.x, p1.x, v1.x, a1.x);
-	poly5(p->p[1], duration, p0.y, v0.y, a0.y, p1.y, v1.y, a1.y);
-	poly5(p->p[2], duration, p0.z, v0.z, a0.z, p1.z, v1.z, a1.z);
-	poly5(p->p[3], duration, y0, dy0, 0, y1, dy1, 0);
+
+	{
+        float tmp[POLY5_COEFFS];
+        memcpy(tmp, p->p[0], sizeof(tmp));
+        poly5(tmp, duration, p0.x, v0.x, a0.x, p1.x, v1.x, a1.x);
+        memcpy(p->p[0], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY5_COEFFS];
+        memcpy(tmp, p->p[1], sizeof(tmp));
+        poly5(tmp, duration, p0.y, v0.y, a0.y, p1.y, v1.y, a1.y);
+        memcpy(p->p[1], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY5_COEFFS];
+        memcpy(tmp, p->p[2], sizeof(tmp));
+        poly5(tmp, duration, p0.z, v0.z, a0.z, p1.z, v1.z, a1.z);
+        memcpy(p->p[2], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY5_COEFFS];
+        memcpy(tmp, p->p[3], sizeof(tmp));
+        poly5(tmp, duration, y0, dy0, 0, y1, dy1, 0);
+        memcpy(p->p[3], tmp, sizeof(tmp));
+    }
 }
 
 // y, dy == yaw, derivative of yaw
@@ -368,9 +410,29 @@ void piecewise_plan_7th_order_no_jerk(struct piecewise_traj *pp, float duration,
 	pp->timescale = 1.0;
 	pp->shift = vzero();
 	pp->n_pieces = 1;
-	poly7_nojerk(p->p[0], duration, p0.x, v0.x, a0.x, p1.x, v1.x, a1.x);
-	poly7_nojerk(p->p[1], duration, p0.y, v0.y, a0.y, p1.y, v1.y, a1.y);
-	poly7_nojerk(p->p[2], duration, p0.z, v0.z, a0.z, p1.z, v1.z, a1.z);
-	poly7_nojerk(p->p[3], duration, y0, dy0, 0, y1, dy1, 0);
+	{
+        float tmp[POLY7_COEFFS];
+        memcpy(tmp, p->p[0], sizeof(tmp));
+        poly7_nojerk(tmp, duration, p0.x, v0.x, a0.x, p1.x, v1.x, a1.x);
+        memcpy(p->p[0], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY7_COEFFS];
+        memcpy(tmp, p->p[1], sizeof(tmp));
+        poly7_nojerk(tmp, duration, p0.y, v0.y, a0.y, p1.y, v1.y, a1.y);
+        memcpy(p->p[1], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY7_COEFFS];
+        memcpy(tmp, p->p[2], sizeof(tmp));
+        poly7_nojerk(tmp, duration, p0.z, v0.z, a0.z, p1.z, v1.z, a1.z);
+        memcpy(p->p[2], tmp, sizeof(tmp));
+    }
+    {
+        float tmp[POLY7_COEFFS];
+        memcpy(tmp, p->p[3], sizeof(tmp));
+        poly7_nojerk(tmp, duration, y0, dy0, 0, y1, dy1, 0);
+        memcpy(p->p[3], tmp, sizeof(tmp));
+    }
 }
 

@@ -37,7 +37,7 @@ static platformConfig_t configs[] = {
   {
     .deviceType = "CF20",
     .deviceTypeName = "Crazyflie 2.0",
-    .sensorImplementation = SensorImplementation_mpu9250_lps25h,
+    .sensorImplementation = SensorImplementation_bmi088_bmp388,
     .physicalLayoutAntennasAreClose = true,
   },
   {
