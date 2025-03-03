@@ -13,6 +13,7 @@ version.c
 tags
 
 /cf2.*
+/hitl.*
 /tag.*
 *.gch
 
