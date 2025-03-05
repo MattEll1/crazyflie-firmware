@@ -79,6 +79,23 @@ SECTIONS
     *(.eh_frame)
     KEEP (*(.init))
     KEEP (*(.fini))
+
+    /* Parameters and log system datas */
+    . = ALIGN(4);
+    _param_start = .;
+    KEEP(*(.param))
+    KEEP(*(.param.*))
+    _param_stop = .;
+    . = ALIGN(4);
+    _log_start = .;
+    KEEP(*(.log))
+    KEEP(*(.log.*))
+    _log_stop = .;
+    _deckDriver_start = .;
+    KEEP(*(.deckDriver));
+    KEEP(*(.deckDriver.*));
+    _deckDriver_stop = .;
+    
     . = ALIGN(4);
   } > m_text
 
