@@ -64,6 +64,10 @@
 #include "deck.h"
 #include "extrx.h"
 
+#ifdef IMX93
+#include "system_param_imx93.h"
+#endif
+
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
@@ -100,14 +104,23 @@ void systemInit(void)
   crtpInit();
   consoleInit();
 
-  DEBUG_PRINT("----------------------------\n");
-  DEBUG_PRINT("%s is up and running!\n", platformConfigGetDeviceTypeName());
-  DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
-              V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
-  DEBUG_PRINT("I am 0x%08X%08X%08X and I have %dKB of flash!\n",
-              *((int*)(MCU_ID_ADDRESS+8)), *((int*)(MCU_ID_ADDRESS+4)),
-              *((int*)(MCU_ID_ADDRESS+0)), *((short*)(MCU_FLASH_SIZE_ADDRESS)));
+  #ifdef IMX93
+    DEBUG_PRINT("----------------------------\n");
+    DEBUG_PRINT("%s is up and running!\n", platformConfigGetDeviceTypeName());
+    DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
+                V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
+    DEBUG_PRINT("I am running on i.MX93 with %dKB of flash!\n", 
+                systemGetFlashSize());
 
+  #else
+    DEBUG_PRINT("----------------------------\n");
+    DEBUG_PRINT("%s is up and running!\n", platformConfigGetDeviceTypeName());
+    DEBUG_PRINT("Build %s:%s (%s) %s\n", V_SLOCAL_REVISION,
+                V_SREVISION, V_STAG, (V_MODIFIED)?"MODIFIED":"CLEAN");
+    DEBUG_PRINT("I am 0x%08X%08X%08X and I have %dKB of flash!\n",
+                *((int*)(MCU_ID_ADDRESS+8)), *((int*)(MCU_ID_ADDRESS+4)),
+                *((int*)(MCU_ID_ADDRESS+0)), *((short*)(MCU_FLASH_SIZE_ADDRESS)));
+  #endif
   configblockInit();
   workerInit();
   adcInit();
@@ -272,13 +285,23 @@ void vApplicationIdleHook( void )
 #endif
 }
 
+#ifdef IMX93
+/* System parameters for i.MX93 */
+  PARAM_GROUP_START(cpu)
+  PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, &systemGetFlashSize)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, &systemGetId0)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, &systemGetId1)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, &systemGetId2)
+  PARAM_GROUP_STOP(cpu)
+#else
 /*System parameters (mostly for test, should be removed from here) */
-PARAM_GROUP_START(cpu)
-PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
-PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
-PARAM_GROUP_STOP(cpu)
+  PARAM_GROUP_START(cpu)
+  PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
+  PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
+  PARAM_GROUP_STOP(cpu)
+#endif
 
 PARAM_GROUP_START(system)
 PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)

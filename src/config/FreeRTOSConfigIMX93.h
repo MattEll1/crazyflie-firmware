@@ -51,6 +51,7 @@
   * See http://www.freertos.org/a00110.html.
   *----------------------------------------------------------*/
  
+  
  /* ---- Core Configuration ---- */
  #define configUSE_PREEMPTION                    1
  #define configUSE_TICKLESS_IDLE                 0
@@ -75,7 +76,7 @@
  /* ---- Memory Management ---- */
  #define configSUPPORT_STATIC_ALLOCATION         0
  #define configSUPPORT_DYNAMIC_ALLOCATION        1
- #define configTOTAL_HEAP_SIZE                   ((size_t)(FREERTOS_HEAP_SIZE))
+ #define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 20 * 1024 ) )
  #define configAPPLICATION_ALLOCATED_HEAP        0
  #define configFRTOS_MEMORY_SCHEME               4  /* Using heap_4.c from iMX93 */
  
@@ -196,12 +197,26 @@
  /* ---- Definitions that map the FreeRTOS port interrupt handlers to their CMSIS standard names ---- */
  #define vPortSVCHandler                         SVC_Handler
  #define xPortPendSVHandler                      PendSV_Handler
- #define xPortSysTickHandler                     SysTick_Handler
+ //#define xPortSysTickHandler                     SysTick_Handler
  
  /* ---- Map Crazyflie-specific handler mappings ---- */
- #define vPortSVCHandler                         SVC_Handler
- #define xPortPendSVHandler                      PendSV_Handler
+ //#define vPortSVCHandler                         SVC_Handler
+//#define xPortPendSVHandler                      PendSV_Handler
  #define xPortSysTickHandler                     tickFreeRTOS
+
+ // For imx93 port
+ #ifndef traceISR_ENTER
+    #define traceISR_ENTER()
+#endif
+
+#ifndef traceISR_EXIT
+    #define traceISR_EXIT()
+#endif
+
+#ifndef traceISR_EXIT_TO_SCHEDULER
+    #define traceISR_EXIT_TO_SCHEDULER()
+#endif
+
  
  /* ---- Crazyflie Queue Monitoring (if enabled) ---- */
  #ifdef DEBUG_QUEUE_MONITOR

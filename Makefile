@@ -31,6 +31,10 @@ LPS_TDOA3_ENABLE  ?= 0
 -include current_platform.mk
 include tools/make/platform.mk
 
+ifeq ($(PLATFORM), imx93)
+CPU = imx93m33
+endif
+
 ######### Stabilizer configuration ##########
 ## These are set by the platform (see tools/make/platforms/*.mk), can be overwritten here
 # ESTIMATOR          ?= any
@@ -80,6 +84,39 @@ LOAD_ADDRESS_stm32f4 = 0x8000000
 LOAD_ADDRESS_CLOAD_stm32f4 = 0x8004000
 endif
 
+
+############### UCM-iMX93 build configuration ################
+
+ifeq ($(CPU), imx93m33)
+PORT = $(FREERTOS)/portable/GCC/ARM_CM33_NTZ/non_secure
+LINKER_DIR = tools/make/iMX93
+IMX93_OBJ_DIR = tools/make/iMX93
+
+# OPENOCD_TARGET    ?= target/imx93.cfg
+
+# Set up VPATH for i.MX93 specific files
+VPATH += $(LIB)/CMSIS/iMX93/Source/
+VPATH += tools/make/iMX93
+VPATH += src/hal/imx93/board
+VPATH += src/hal/imx93
+VPATH += src/drivers/imx93
+VPATH += src/drivers/imx93/src
+
+CRT0 = startup_MIMX9352_cm33.o system_MIMX9352_cm33.o
+
+# Add imx93 object files
+-include $(IMX93_OBJ_DIR)/imx93_obj.mk
+
+CFLAGS += -include src/config/FreeRTOSConfigIMX93.h
+
+PROCESSOR = -mcpu=cortex-m33 -mthumb -mfloat-abi=hard -mfpu=fpv5-sp-d16
+CFLAGS += -fno-math-errno -DARM_MATH_CM33 -D__FPU_PRESENT=1 -D__DSP_PRESENT=1 -D__VTOR_PRESENT=1 -DIMX93 -DCPU_MIMX9352DVVXM_cm33
+
+LOAD_ADDRESS_imx933 = 0x0FFE0000
+LOAD_ADDRESS_CLOAD_imx933 = 0x0FFE0478
+endif
+
+
 ################ Build configuration ##################
 
 # libdw dw1000 driver
@@ -116,35 +153,59 @@ PROJ_OBJ += main.o
 PROJ_OBJ += platform.o platform_utils.o platform_$(PLATFORM).o platform_$(CPU).o
 
 # Drivers
+ifeq ($(CPU), imx93m33)
+PROJ_OBJ += nvic_imx93.o exti_imx93.o
+#insert the object file for the future rpmsg link to the crtp
+
+else
 PROJ_OBJ += exti.o nvic.o motors.o
-PROJ_OBJ += led_f405.o mpu6500.o i2cdev_f405.o ws2812_cf2.o lps25h.o i2c_drv.o
-PROJ_OBJ += ak8963.o eeprom.o maxsonar.o piezo.o
-PROJ_OBJ += uart_syslink.o swd.o uart1.o uart2.o watchdog.o
-PROJ_OBJ += cppm.o
-PROJ_OBJ += bmi055_accel.o bmi055_gyro.o bmi160.o bmp280.o bstdr_comm_support.o bmm150.o
-PROJ_OBJ += bmi088_accel.o bmi088_gyro.o bmi088_fifo.o bmp3.o
-PROJ_OBJ += pca9685.o vl53l0x.o pca95x4.o pca9555.o vl53l1x.o pmw3901.o
+endif
+
+# PROJ_OBJ += mpu6500.o i2cdev_f405.o ws2812_cf2.o lps25h.o i2c_drv.o led_f405.o
+# PROJ_OBJ += ak8963.o eeprom.o maxsonar.o piezo.o
+# PROJ_OBJ += uart_syslink.o swd.o uart1.o uart2.o watchdog.o
+# PROJ_OBJ += cppm.o
+# PROJ_OBJ += bmi055_accel.o bmi055_gyro.o bmi160.o bmp280.o bstdr_comm_support.o bmm150.o
+# PROJ_OBJ += bmi088_accel.o bmi088_gyro.o bmi088_fifo.o bmp3.o
+# PROJ_OBJ += pca9685.o vl53l0x.o pca95x4.o pca9555.o vl53l1x.o pmw3901.o
 
 # USB Files
-PROJ_OBJ += usb_bsp.o usblink.o usbd_desc.o usb.o
+#PROJ_OBJ += usb_bsp.o usblink.o usbd_desc.o usb.o
 
 # Hal
 PROJ_OBJ += crtp.o ledseq.o freeRTOSdebug.o buzzer.o
-PROJ_OBJ += pm_$(CPU).o syslink.o radiolink.o ow_syslink.o proximity.o usec_time.o
+#PROJ_OBJ += pm_$(CPU).o syslink.o radiolink.o ow_syslink.o proximity.o usec_time.o
 PROJ_OBJ += sensors.o
 
 # libdw
 PROJ_OBJ += libdw1000.o libdw1000Spi.o
 
+ifeq ($(CPU), imx93m33)
+PORT_OBJ += portasm.o mpu_wrappers_v2_asm.o
+PROJ_OBJ += watchdog_imx93.o
+PROJ_OBJ += system_param_imx93.o
+PROJ_OBJ += crtp_imx93.o 
+PROJ_OBJ += fsl_debug_console.o fsl_adapter_lpuart.o fsl_lpuart.o fsl_clock.o
+PROJ_OBJ += led_imx93.o motors_imx93.o pm_imx93.o usec_time_imx93.o
+PROJ_OBJ += comm_imx93.o deck_imx93.o mem_imx93.o io_imx93.o sound_imx93.o
+PROJ_OBJ += board.o
+endif
+
 # vl53l1 lib
-PROJ_OBJ += vl53l1_api_core.o vl53l1_api.o vl53l1_core.o vl53l1_silicon_core.o vl53l1_api_strings.o
-PROJ_OBJ += vl53l1_api_calibration.o vl53l1_api_debug.o vl53l1_api_preset_modes.o vl53l1_error_strings.o
-PROJ_OBJ += vl53l1_register_funcs.o vl53l1_wait.o vl53l1_core_support.o
+# PROJ_OBJ += vl53l1_api_core.o vl53l1_api.o vl53l1_core.o vl53l1_silicon_core.o vl53l1_api_strings.o
+# PROJ_OBJ += vl53l1_api_calibration.o vl53l1_api_debug.o vl53l1_api_preset_modes.o vl53l1_error_strings.o
+# PROJ_OBJ += vl53l1_register_funcs.o vl53l1_wait.o vl53l1_core_support.o
 
 # Modules
 PROJ_OBJ += system.o comm.o console.o pid.o crtpservice.o param.o
 PROJ_OBJ += log.o worker.o trigger.o sitaw.o queuemonitor.o msp.o
-PROJ_OBJ += platformservice.o sound_cf2.o extrx.o sysload.o mem_cf2.o
+PROJ_OBJ += platformservice.o sound_cf2.o extrx.o sysload.o 
+
+
+ifneq ($(CPU), imx93m33)
+PROJ_OBJ += mem_cf2.o
+endif
+
 PROJ_OBJ += range.o
 
 # Stabilizer modules
@@ -160,34 +221,34 @@ PROJ_OBJ += estimator_kalman.o
 # High-Level Commander
 PROJ_OBJ += crtp_commander_high_level.o planner.o pptraj.o
 
-# Deck Core
-PROJ_OBJ += deck.o deck_info.o deck_drivers.o deck_test.o
+# # Deck Core
+# PROJ_OBJ += deck.o deck_info.o deck_drivers.o deck_test.o
 
-# Deck API
-PROJ_OBJ += deck_constants.o
-PROJ_OBJ += deck_digital.o
-PROJ_OBJ += deck_analog.o
-PROJ_OBJ += deck_spi.o
+# # Deck API
+# PROJ_OBJ += deck_constants.o
+# PROJ_OBJ += deck_digital.o
+# PROJ_OBJ += deck_analog.o
+# PROJ_OBJ += deck_spi.o
 
-# Decks
-PROJ_OBJ += bigquad.o
-PROJ_OBJ += rzr.o
-PROJ_OBJ += ledring12.o
-PROJ_OBJ += buzzdeck.o
-PROJ_OBJ += gtgps.o
-PROJ_OBJ += cppmdeck.o
-PROJ_OBJ += usddeck.o
-PROJ_OBJ += zranger.o zranger2.o
-PROJ_OBJ += locodeck.o
-PROJ_OBJ += clockCorrectionEngine.o
-PROJ_OBJ += lpsTwrTag.o
-PROJ_OBJ += lpsTdoa2Tag.o
-PROJ_OBJ += lpsTdoa3Tag.o tdoaEngine.o tdoaStats.o tdoaStorage.o
-PROJ_OBJ += outlierFilter.o
-PROJ_OBJ += flowdeck_v1v2.o
-PROJ_OBJ += oa.o
-PROJ_OBJ += multiranger.o
-PROJ_OBJ += lighthouse.o
+# # Decks
+# PROJ_OBJ += bigquad.o
+# PROJ_OBJ += rzr.o
+# PROJ_OBJ += ledring12.o
+# PROJ_OBJ += buzzdeck.o
+# PROJ_OBJ += gtgps.o
+# PROJ_OBJ += cppmdeck.o
+# PROJ_OBJ += usddeck.o
+# PROJ_OBJ += zranger.o zranger2.o
+# PROJ_OBJ += locodeck.o
+# PROJ_OBJ += clockCorrectionEngine.o
+# PROJ_OBJ += lpsTwrTag.o
+# PROJ_OBJ += lpsTdoa2Tag.o
+# PROJ_OBJ += lpsTdoa3Tag.o tdoaEngine.o tdoaStats.o tdoaStorage.o
+# PROJ_OBJ += outlierFilter.o
+# PROJ_OBJ += flowdeck_v1v2.o
+# PROJ_OBJ += oa.o
+# PROJ_OBJ += multiranger.o
+# PROJ_OBJ += lighthouse.o
 
 ifeq ($(LPS_TDOA_ENABLE), 1)
 CFLAGS += -DLPS_TDOA_ENABLE
@@ -213,8 +274,8 @@ endif
 endif
 
 #Deck tests
-PROJ_OBJ += exptest.o
-PROJ_OBJ += exptestRR.o
+# PROJ_OBJ += exptest.o
+# PROJ_OBJ += exptestRR.o
 #PROJ_OBJ += bigquadtest.o
 
 
@@ -223,7 +284,7 @@ PROJ_OBJ += filter.o cpuid.o cfassert.o  eprintf.o crc.o num.o debug.o
 PROJ_OBJ += version.o FreeRTOS-openocd.o
 PROJ_OBJ += configblockeeprom.o crc_bosch.o
 PROJ_OBJ += sleepus.o
-PROJ_OBJ += pulse_processor.o lighthouse_geometry.o
+# PROJ_OBJ += pulse_processor.o lighthouse_geometry.o
 
 
 # Libs
@@ -244,10 +305,27 @@ INCLUDES += -Isrc/config -Isrc/hal/interface -Isrc/modules/interface
 INCLUDES += -Isrc/utils/interface -Isrc/drivers/interface -Isrc/platform
 INCLUDES += -Ivendor/CMSIS/CMSIS/Include -Isrc/drivers/bosch/interface
 
+#imx93 includes
+ifeq ($(CPU), imx93m33)
+INCLUDES += -Isrc/drivers/imx93/interface 
+INCLUDES += -Itools/make/iMX93
+INCLUDES += -Isrc/hal/imx93/board
+INCLUDES += -I$(LIB)/CMSIS/iMX93/Include
+INCLUDES += -I$(LIB)/CMSIS/iMX93/Include/m-profile
+INCLUDES += -I$(LIB)/CMSIS/iMX93/Include/periph
+INCLUDES += -I$(LIB)/rpmsg-lite/lib/include
+INCLUDES += -I$(LIB)/rpmsg-lite/lib/include/environment/freertos
+INCLUDES += -I$(LIB)/rpmsg-lite/lib/include/platform/imx93_m33
+#INCLUDES  = -I$(FREERTOS)/include/freertos_m33 
+
+
+else
 INCLUDES += -I$(LIB)/STM32F4xx_StdPeriph_Driver/inc
 INCLUDES += -I$(LIB)/CMSIS/STM32F4xx/Include
 INCLUDES += -I$(LIB)/STM32_USB_Device_Library/Core/inc
 INCLUDES += -I$(LIB)/STM32_USB_OTG_Driver/inc
+endif
+
 INCLUDES += -Isrc/deck/interface -Isrc/deck/drivers/interface
 INCLUDES += -Isrc/utils/interface/clockCorrection
 INCLUDES += -Isrc/utils/interface/tdoa
@@ -270,7 +348,14 @@ ifeq ($(LTO), 1)
   CFLAGS += -flto
 endif
 
-CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
+# imx93 specifc definies - uses simulation sensors and power distribution
+# might be redundant since its being set in the imx93.mk file?
+ifeq ($(CPU), imx93m33)
+  CFLAGS += -DSENSOR_INCLUDED_SIM -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
+else
+  CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
+endif
+
 
 CFLAGS += $(PROCESSOR) $(INCLUDES)
 
@@ -287,8 +372,11 @@ CFLAGS += -Wdouble-promotion
 ASFLAGS = $(PROCESSOR) $(INCLUDES)
 LDFLAGS = --specs=nosys.specs --specs=nano.specs $(PROCESSOR) -Wl,-Map=$(PROG).map,--cref,--gc-sections,--undefined=uxTopUsedPriority 
 
+#not using CLOAD for UCM-iMX93 evk
+ifeq ($(CPU), imx93m33)
+  LDFLAGS += -T $(LINKER_DIR)/MIMX9352xxxxM_ram.ld
+else ifeq ($(CLOAD), 1)
 #Flags required by the ST library
-ifeq ($(CLOAD), 1)
   LDFLAGS += -T $(LINKER_DIR)/FLASH_CLOAD.ld
   LOAD_ADDRESS = $(LOAD_ADDRESS_CLOAD_$(CPU))
 else

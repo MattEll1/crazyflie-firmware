@@ -39,7 +39,10 @@
 #include "crtp.h"
 #include "mem.h"
 #include "ow.h"
+
+#ifdef STM32F4XX
 #include "eeprom.h"
+#endif
 
 #include "ledring12.h"
 #include "locodeck.h"

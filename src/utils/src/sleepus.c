@@ -30,7 +30,9 @@
 
 #include "config.h"
 
+#ifndef IMX93
 #include "stm32f4xx.h"
+#endif
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -31,11 +31,11 @@
   */
  extern void tickFreeRTOS(void);
  
- void DONT_DISCARD SysTick_Handler(void)
- {
-     // Call FreeRTOS tick handler - same as original code
-     tickFreeRTOS();
- }
+//  void DONT_DISCARD SysTick_Handler(void)
+//  {
+//      // Call FreeRTOS tick handler - same as original code
+//      tickFreeRTOS();
+//  }
  
  /**
    * @brief  This function handles NMI exception.

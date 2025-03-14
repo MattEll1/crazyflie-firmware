@@ -24,24 +24,30 @@
  * console.c - Used to send console data to client
  */
 
-#include <stdbool.h>
-
-/*FreeRtos includes*/
-#include "FreeRTOS.h"
-#include "semphr.h"
-
-#include "crtp.h"
-
-#ifndef SITL_CF2
-#ifdef STM32F40_41xxx
-#include "stm32f4xx.h"
-#else
-#include "stm32f10x.h"
-#ifndef SCB_ICSR_VECTACTIVE_Msk
-#define SCB_ICSR_VECTACTIVE_Msk 0x1FFUL
-#endif
-#endif
-#endif
+ #include <stdbool.h>
+ #include <stddef.h>  // For NULL
+ #include "FreeRTOS.h"
+ #include "semphr.h"
+ #include "crtp.h"    // This must be included regardless of platform
+ 
+ /* Platform-specific includes */
+ #ifndef SITL_CF2
+   #ifdef IMX93
+     /* i.MX93 includes */
+     #include "fsl_device_registers.h"
+     /* Make sure CMSIS core defines are available */
+     #ifndef SCB_ICSR_VECTACTIVE_Msk
+       #define SCB_ICSR_VECTACTIVE_Msk 0x1FFUL
+     #endif
+   #elif defined(STM32F40_41xxx)
+     #include "stm32f4xx.h"
+   #else
+     #include "stm32f10x.h"
+     #ifndef SCB_ICSR_VECTACTIVE_Msk
+       #define SCB_ICSR_VECTACTIVE_Msk 0x1FFUL
+     #endif
+   #endif
+ #endif
 
 CRTPPacket messageToPrint;
 xSemaphoreHandle synch = NULL;

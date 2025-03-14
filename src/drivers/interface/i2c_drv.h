@@ -9,6 +9,14 @@
 
 #define I2C_NO_INTERNAL_ADDRESS   0xFFFF
 
+
+//more dummy code for iMX93 HITL port.
+#ifdef IMX93
+typedef struct {
+    int dummy;
+} I2C_TypeDef, DMA_Stream_TypeDef, DMA_InitTypeDef;
+#endif
+
 typedef enum
 {
   i2cAck,

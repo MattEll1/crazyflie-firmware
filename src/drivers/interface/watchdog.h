@@ -34,7 +34,15 @@
 
 void watchdogInit(void);
 bool watchdogNormalStartTest(void);
+
+#ifdef IMX93
+// i.MX93 version of the watchdog reset function
+void IWDG_ReloadCounter(void); // Declare our compatibility function
 #define watchdogReset() (IWDG_ReloadCounter())
+#else
+// Original STM32 version
+#define watchdogReset() (IWDG_ReloadCounter())
+#endif
 
 #endif // WATCHDOG_H_
 

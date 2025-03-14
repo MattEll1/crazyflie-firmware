@@ -131,7 +131,10 @@ float pmGetBatteryVoltageMax(void);
  * Updates and calculates battery values.
  * Should be called for every new adcValues sample.
  */
-void pmBatteryUpdate(AdcGroup* adcValues);
+ //Another quick fix for the IMX93 port
+ #ifdef STM32F4XX
+ void pmBatteryUpdate(AdcGroup* adcValues);
+ #endif
 
 /**
  * Returns true if the battery is currently in use

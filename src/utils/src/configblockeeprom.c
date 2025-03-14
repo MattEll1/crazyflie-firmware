@@ -32,7 +32,11 @@
 
 #include "config.h"
 #include "debug.h"
+
+#ifndef IMX93
 #include "i2cdev.h"
+#endif
+
 #include "configblock.h"
 #include "eeprom.h"
 
