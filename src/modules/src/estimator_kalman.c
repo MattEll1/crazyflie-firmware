@@ -58,8 +58,13 @@
 #include "estimator_kalman.h"
 #include "outlierFilter.h"
 
-#ifndef SITL_CF2
+#if !defined(SITL_CF2) && !defined(IMX93)
 #include "stm32f4xx.h"
+#elif defined(IMX93)
+#include "MIMX9352_cm33.h"    // i.MX93-specific processor definitions (MUST be first)
+#include "core_cm33.h"        // Defines IRQn_Type, NVIC functions
+#include "cmsis_gcc.h"        // Provides __ASM, __STATIC_INLINE
+#include "system_MIMX9352_cm33.h"  // i.MX93 system config
 #endif
 
 #include "FreeRTOS.h"

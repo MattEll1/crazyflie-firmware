@@ -27,10 +27,15 @@
 #ifndef STM32FXXX_H_
 #define STM32FXXX_H_
 
+#pragma once
+
 #if defined (STM32F40_41xxx)
   #include "stm32f4xx.h"
 #elif defined (STM32F10X_MD)
   #include "stm32f10x.h"
+#elif defined(IMX93)
+  #include "imx93xxx.h"
+  #include "imx93_conf.h"
 #else
   #warning "Don't know which stm32fxxx header file to include"
 #endif

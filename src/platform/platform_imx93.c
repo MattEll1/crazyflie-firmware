@@ -32,6 +32,7 @@
 #include "exti_imx93.h"
 #include "nvic_imx93.h"
 #include "debug.h"
+#include "board.h"
 
 static platformConfig_t configs[] = {
   {
@@ -54,6 +55,7 @@ const platformConfig_t* platformGetListOfConfigurations(int* nrOfConfigs) {
 }
 
 void platformInitHardware() {
+  BOARD_InitDebugConsole();
   //Low level init: Clock and Interrupt controller
   nvicInit();
 

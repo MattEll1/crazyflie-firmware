@@ -40,7 +40,7 @@
 #include "led.h"
 
 /* ST includes */
-#include "stm32fxxx.h"
+//#include "stm32fxxx.h"
 
 int main() 
 {

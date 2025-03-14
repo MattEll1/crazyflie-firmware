@@ -172,6 +172,14 @@ typedef enum
   BRUSHLESS
 } motorsDrvType;
 
+//Placeholder for MotorPerifDef struct for iMX93 build
+#ifdef IMX93
+typedef struct {
+    int dummy;  // Placeholder to avoid compiler errors
+} MotorPerifDef;
+#endif
+
+#ifndef IMX93  // Exclude for i.MX93. Quick fix for HITL. LTS, i nees to find an imx93 equivalent to TIM_TypeDef. Maybe "GPIO_TypeDef"? 
 typedef struct
 {
   motorsDrvType drvType;
@@ -193,6 +201,7 @@ typedef struct
   void (*ocInit)(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
   void (*preloadConfig)(TIM_TypeDef* TIMx, uint16_t TIM_OCPreload);
 } MotorPerifDef;
+#endif
 
 /**
  * Motor mapping configurations

@@ -51,10 +51,15 @@ $(PROG).bin: $(PROG).elf
 	@$(BIN_COMMAND)
 
 DFU_COMMAND=$(PYTHON2) tools/make/dfu-convert.py -b $(LOAD_ADDRESS):$< $@
-DFU_COMMAND_SILENT="  DFUse $@"
+DFU_COMMAND_SILENT=" DFUse $@"
 $(PROG).dfu: $(PROG).bin
+ifeq ($(CPU), imx93m33)
+	@echo "  Creating dummy DFU file for i.MX93 platform"
+	@touch $@
+else
 	@$(if $(QUIET), ,echo $(DFU_COMMAND$(VERBOSE)) )
 	@$(DFU_COMMAND)
+endif
 
 AS_COMMAND=$(AS) $(ASFLAGS) $< -o $(BIN)/$@
 AS_COMMAND_SILENT="  AS    $@"
