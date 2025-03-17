@@ -22,4 +22,4 @@ tags
 
 current_platform.mk
 
-vendor/CMSIS
+vendor/CMSIS/
