@@ -14,9 +14,12 @@ tags
 
 /cf2.*
 /hitl.*
+/imx93.*
 /tag.*
 *.gch
 
 /generated-test/**
 
 current_platform.mk
+
+vendor/CMSIS
