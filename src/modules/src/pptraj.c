@@ -161,16 +161,36 @@ struct poly4d poly4d_zero(float duration)
 
 struct poly4d poly4d_linear(float duration, struct vec p0, struct vec p1, float yaw0, float yaw1)
 {
-	struct poly4d p;
-	p.duration = duration;
-	float aligned_p[4][POLY_LINEAR_COEFFS];
+	// struct poly4d p;
+	// p.duration = duration;
+	// float aligned_p[4][POLY_LINEAR_COEFFS];
 
-	polylinear(aligned_p[0], duration, p0.x, p1.x);
-	polylinear(aligned_p[1], duration, p0.y, p1.y);
-	polylinear(aligned_p[2], duration, p0.z, p1.z);
-	polylinear(aligned_p[3], duration, yaw0, yaw1);
-	memcpy(p.p, aligned_p, sizeof(aligned_p));
-	return p;
+	// polylinear(aligned_p[0], duration, p0.x, p1.x);
+	// polylinear(aligned_p[1], duration, p0.y, p1.y);
+	// polylinear(aligned_p[2], duration, p0.z, p1.z);
+	// polylinear(aligned_p[3], duration, yaw0, yaw1);
+	// memcpy(p.p, aligned_p, sizeof(aligned_p));
+	// return p;
+	struct poly4d p;
+    p.duration = duration;
+    
+    // Initialize all elements to zero
+    memset(p.p, 0, sizeof(p.p));
+    
+    // Set only the values we need
+    p.p[0][0] = p0.x;
+    p.p[0][1] = (p1.x - p0.x) / duration;
+    
+    p.p[1][0] = p0.y;
+    p.p[1][1] = (p1.y - p0.y) / duration;
+    
+    p.p[2][0] = p0.z;
+    p.p[2][1] = (p1.z - p0.z) / duration;
+    
+    p.p[3][0] = yaw0;
+    p.p[3][1] = (yaw1 - yaw0) / duration;
+    
+    return p;
 }
 
 void poly4d_scale(struct poly4d *p, float x, float y, float z, float yaw)
@@ -342,10 +362,10 @@ struct traj_eval piecewise_eval_reversed(
 			poly4d_shift(&poly4d_tmp, traj->shift.x, traj->shift.y, traj->shift.z, 0);
 			poly4d_stretchtime(&poly4d_tmp, traj->timescale);
 			for (int i = 0; i < 4; ++i) {
-				float aligned_p[4];
-				memcpy(aligned_p, poly4d_tmp.p[i], sizeof(aligned_p));
-				//polyreflect(poly4d_tmp.p[i]);
-				polyreflect(aligned_p);
+				// Only negate the first few elements that actually exist
+				for (int j = 1; j < 4 && j < PP_SIZE; j += 2) {
+					poly4d_tmp.p[i][j] = -poly4d_tmp.p[i][j];
+				}
 			}
 			t = t - piece->duration * traj->timescale;
 			return poly4d_eval(&poly4d_tmp, t);
