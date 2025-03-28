@@ -22,15 +22,17 @@
  ******************************************************************************/
 
 /* The UART to use for debug messages. */
-#define BOARD_DEBUG_UART_INSTANCE   2U
+#define BOARD_DEBUG_UART_INSTANCE   1U
 #define BOARD_DEBUG_UART_BAUDRATE   115200U
 #define BOARD_DEBUG_UART_TYPE       kSerialPort_Uart
-#define BOARD_DEBUG_UART_CLOCK_ROOT kCLOCK_Root_Lpuart2
-#define BOARD_DEBUG_UART_CLOCK_GATE kCLOCK_Lpuart2
+#define BOARD_DEBUG_UART_CLOCK_ROOT kCLOCK_Root_Lpuart1
+#define BOARD_DEBUG_UART_CLOCK_GATE kCLOCK_Lpuart1
 #define BOARD_DEBUG_UART_CLK_FREQ   CLOCK_GetIpFreq(BOARD_DEBUG_UART_CLOCK_ROOT)
 
 #define VDEV0_VRING_BASE (0xA4000000U)
 #define VDEV1_VRING_BASE (0xA4010000U)
+// #define VDEV0_VRING_BASE (0x90100000U) /* In DDR memory */
+// #define VDEV1_VRING_BASE (0x90120000U) /* In DDR memory */
 
 #define LED_INIT()
 #define LED_TOGGLE()

@@ -33,6 +33,9 @@ M_VECTOR_RAM_SIZE = DEFINED(__ram_vector_table__) ? 0x0478 : 0x0;
 /* Specify the memory areas */
 MEMORY
 {
+  /* New DDR memory region for cf firmware */
+  m_ddr                 (RWX) : ORIGIN = 0x90000000, LENGTH = 0x00600000
+
   m_interrupts          (RX)  : ORIGIN = 0x0FFE0000, LENGTH = 0x00000478
   m_text                (RX)  : ORIGIN = 0x0FFE0478, LENGTH = 0x0001FB88
   m_m33_suspend_ram     (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00002000
@@ -45,6 +48,15 @@ MEMORY
 SECTIONS
 {
   /* The startup code goes first into internal RAM */
+
+  .resource_table :
+  {
+    . = ALIGN(8);
+    KEEP(*(.resource_table)) /* Resource table */
+    . = ALIGN(8);
+  } > m_ddr
+
+
   .interrupts :
   {
     __VECTOR_TABLE = .;
@@ -52,14 +64,8 @@ SECTIONS
     . = ALIGN(4);
     KEEP(*(.isr_vector))     /* Startup code */
     . = ALIGN(4);
-  } > m_interrupts
-
-  .resource_table :
-  {
-    . = ALIGN(8);
-    KEEP(*(.resource_table)) /* Resource table */
-    . = ALIGN(8);
-  } > m_text
+  } > m_ddr
+  
 
   /* The program code and other data goes into internal RAM */
   .text :
@@ -97,19 +103,19 @@ SECTIONS
     _deckDriver_stop = .;
     
     . = ALIGN(4);
-  } > m_text
+  } > m_ddr
 
   .ARM.extab :
   {
     *(.ARM.extab* .gnu.linkonce.armextab.*)
-  } > m_text
+  } > m_ddr
 
   .ARM :
   {
     __exidx_start = .;
     *(.ARM.exidx*)
     __exidx_end = .;
-  } > m_text
+  } > m_ddr
 
  .ctors :
   {
@@ -133,7 +139,7 @@ SECTIONS
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
     __CTOR_END__ = .;
-  } > m_text
+  } > m_ddr
 
   .dtors :
   {
@@ -144,14 +150,14 @@ SECTIONS
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
     __DTOR_END__ = .;
-  } > m_text
+  } > m_ddr
 
   .preinit_array :
   {
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
-  } > m_text
+  } > m_ddr
 
   .init_array :
   {
@@ -159,7 +165,7 @@ SECTIONS
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
-  } > m_text
+  } > m_ddr
 
   .fini_array :
   {
@@ -167,7 +173,7 @@ SECTIONS
     KEEP (*(SORT(.fini_array.*)))
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
-  } > m_text
+  } > m_ddr
 
   __etext = .;    /* define a global symbol at end of code */
   __DATA_ROM = .; /* Symbol is used by startup for data initialization */
@@ -181,7 +187,7 @@ SECTIONS
     . += M_VECTOR_RAM_SIZE;
     . = ALIGN(4);
     __interrupts_ram_end__ = .; /* Define a global symbol at data end */
-  } > m_data
+  } > m_ddr
 
   __VECTOR_RAM = DEFINED(__ram_vector_table__) ? __VECTOR_RAM__ : ORIGIN(m_interrupts);
   __RAM_VECTOR_TABLE_SIZE_BYTES = DEFINED(__ram_vector_table__) ? (__interrupts_ram_end__ - __interrupts_ram_start__) : 0x0;
@@ -201,11 +207,11 @@ SECTIONS
     KEEP(*(.jcr*))
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
-  } > m_data
+  } > m_ddr
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
-  text_end = ORIGIN(m_text) + LENGTH(m_text);
-  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
+  text_end = ORIGIN(m_ddr) + LENGTH(m_ddr);
+  ASSERT(__DATA_END <= text_end, "region m_ddr overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :
@@ -220,7 +226,7 @@ SECTIONS
     . = ALIGN(4);
     __bss_end__ = .;
     __END_BSS = .;
-  } > m_data
+  } > m_ddr
 
   .m33_suspend :
   {
@@ -237,16 +243,16 @@ SECTIONS
     . += HEAP_SIZE;
     __HeapLimit = .;
     __heap_limit = .; /* Add for _sbrk */
-  } > m_data
+  } > m_ddr
 
   .stack :
   {
     . = ALIGN(8);
     . += STACK_SIZE;
-  } > m_data
+  } > m_ddr
 
   /* Initializes stack on the end of block */
-  __StackTop   = ORIGIN(m_data) + LENGTH(m_data);
+  __StackTop   = ORIGIN(m_ddr) + LENGTH(m_ddr);
   __StackLimit = __StackTop - STACK_SIZE;
   PROVIDE(__stack = __StackTop);
 
@@ -256,6 +262,6 @@ SECTIONS
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 
-  ASSERT(__StackLimit >= __HeapLimit, "region m_data overflowed with stack and heap")
+  ASSERT(__StackLimit >= __HeapLimit, "region m_ddr overflowed with stack and heap")
 }
 

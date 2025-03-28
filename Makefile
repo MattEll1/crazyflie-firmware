@@ -112,7 +112,7 @@ CFLAGS += -include src/config/FreeRTOSConfigIMX93.h
 PROCESSOR = -mcpu=cortex-m33 -mthumb -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -fno-math-errno -DARM_MATH_CM33 -D__FPU_PRESENT=1 -D__DSP_PRESENT=1 -D__VTOR_PRESENT=1 -DIMX93 -DCPU_MIMX9352DVVXM_cm33
 
-LOAD_ADDRESS_imx933 = 0x0FFE0000
+LOAD_ADDRESS_imx933 = 0x90000000
 LOAD_ADDRESS_CLOAD_imx933 = 0x0FFE0478
 endif
 
@@ -155,6 +155,7 @@ PROJ_OBJ += platform.o platform_utils.o platform_$(PLATFORM).o platform_$(CPU).o
 # Drivers
 ifeq ($(CPU), imx93m33)
 PROJ_OBJ += nvic_imx93.o exti_imx93.o
+PROJ_OBJ += rsc_table.o
 #insert the object file for the future rpmsg link to the crtp
 
 else
@@ -186,9 +187,11 @@ PROJ_OBJ += watchdog_imx93.o
 PROJ_OBJ += system_param_imx93.o
 PROJ_OBJ += crtp_imx93.o 
 PROJ_OBJ += fsl_debug_console.o fsl_adapter_lpuart.o fsl_lpuart.o fsl_clock.o
-PROJ_OBJ += led_imx93.o motors_imx93.o pm_imx93.o usec_time_imx93.o
+PROJ_OBJ += fsl_assert.o fsl_common.o fsl_common_arm.o fsl_cache.o fsl_sbrk.o fsl_str.o
+PROJ_OBJ += led_imx93.o motors_imx93.o pm_imx93.o usec_time_imx93.o fsl_mu.o fsl_rgpio.o
 PROJ_OBJ += comm_imx93.o deck_imx93.o mem_imx93.o io_imx93.o sound_imx93.o
 PROJ_OBJ += board.o
+PROJ_OBJ += hardware_init.o pin_mux.o clock_config.o
 endif
 
 # vl53l1 lib
@@ -307,6 +310,7 @@ INCLUDES += -Ivendor/CMSIS/CMSIS/Include -Isrc/drivers/bosch/interface
 
 #imx93 includes
 ifeq ($(CPU), imx93m33)
+INCLUDES += -Isrc/init
 INCLUDES += -Isrc/drivers/imx93/interface 
 INCLUDES += -Itools/make/iMX93
 INCLUDES += -Isrc/hal/imx93/board

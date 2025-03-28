@@ -33,6 +33,7 @@
 #include "nvic_imx93.h"
 #include "debug.h"
 #include "board.h"
+#include "fsl_debug_console.h"
 
 static platformConfig_t configs[] = {
   {
@@ -55,14 +56,22 @@ const platformConfig_t* platformGetListOfConfigurations(int* nrOfConfigs) {
 }
 
 void platformInitHardware() {
-  BOARD_InitDebugConsole();
+  // PRINTF("Starting iMX93 hardware initialization...\n");
+  // BOARD_InitDebugConsole();
+  // PRINTF("Debug console initialized\n");
+
   //Low level init: Clock and Interrupt controller
+  PRINTF("Initializing NVIC...\n");
   nvicInit();
+  PRINTF("Initializing NVIC...\n");
 
   //EXTI interrupts
+  PRINTF("Initializing EXTI...\n");
   extiInit();
+  PRINTF("EXTI initialized\n");
 
-  DEBUG_PRINT("iMX93 platform initialized\n");
+  //DEBUG_PRINT("iMX93 platform initialized\n");
+  PRINTF("iMX93 platform initialized\n");
 }
 
 
