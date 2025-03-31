@@ -63,7 +63,7 @@ void platformInitHardware() {
   //Low level init: Clock and Interrupt controller
   PRINTF("Initializing NVIC...\n");
   nvicInit();
-  PRINTF("Initializing NVIC...\n");
+  PRINTF("NVIC initialized\n");
 
   //EXTI interrupts
   PRINTF("Initializing EXTI...\n");

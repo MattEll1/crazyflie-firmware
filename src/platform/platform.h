@@ -29,7 +29,7 @@
 #include <stdbool.h>
 
 #define PLATFORM_DEVICE_TYPE_STRING_MAX_LEN (32 + 1)
-#define PLATFORM_DEVICE_TYPE_MAX_LEN (4 + 1)
+#define PLATFORM_DEVICE_TYPE_MAX_LEN (5 + 1)
 
 typedef enum {
   #ifdef SENSOR_INCLUDED_BMI088_BMP388

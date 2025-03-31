@@ -49,8 +49,12 @@
 #include "controller.h"
 #include "power_distribution.h"
 
+#ifndef DISABLE_KALMAN_ESTIMATOR
 #include "estimator_kalman.h"
+#endif
+
 #include "estimator.h"
+#include "fsl_debug_console.h"
 
 static bool isInit;
 static bool emergencyStop = false;
@@ -98,10 +102,12 @@ void stabilizerInit(StateEstimatorType estimator)
   stateEstimatorInit(estimator);
   controllerInit(ControllerTypeAny);
   powerDistributionInit();
+  #ifndef DISABLE_KALMAN_ESTIMATOR
   if (estimator == kalmanEstimator)
   {
     sitAwInit();
   }
+  #endif
   estimatorType = getStateEstimator();
   controllerType = getControllerType();
 
@@ -143,10 +149,13 @@ static void stabilizerTask(void* param)
 {
   uint32_t tick;
   uint32_t lastWakeTime;
+  static uint32_t heartbeatCounter = 0;
   vTaskSetApplicationTaskTag(0, (void*)TASK_STABILIZER_ID_NBR);
 
+  PRINTF("STAB: Task running\n"); 
+
   //Wait for the system to be fully started to start stabilization loop
-  systemWaitStart();
+  systemWaitStart();  
 
   // Wait for sensors to be calibrated
   lastWakeTime = xTaskGetTickCount ();
@@ -156,9 +165,17 @@ static void stabilizerTask(void* param)
   // Initialize tick to something else then 0
   tick = 1;
 
+  PRINTF("STAB: Task running\n"); 
   while(1) {
     // The sensor should unlock at 1kHz
     sensorsWaitDataReady();
+
+    // Simple heartbeat
+    heartbeatCounter++;
+    if (heartbeatCounter >= 1000) {
+      PRINTF("STAB: Heartbeat tick %d\n", (int)xTaskGetTickCount());
+      heartbeatCounter = 0;
+    }
 
     if (startPropTest != false) {
       // TODO: What happens with estimator when we run tests after startup?
@@ -187,7 +204,9 @@ static void stabilizerTask(void* param)
         controllerType = getControllerType();
       }
 
-      getExtPosition(&state);
+      #ifndef DISABLE_KALMAN_ESTIMATOR
+        getExtPosition(&state);
+      #endif
       stateEstimator(&state, &sensorData, &control, tick);
       
       commanderGetSetpoint(&setpoint, &state);
@@ -409,9 +428,9 @@ static void testProps(sensorData_t *sensors)
         nrFailedTests++;
         for (int j = 0; j < 3; j++)
         {
-          motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
+          //motorsBeep(m, true, testsound[m], (uint16_t)(MOTORS_TIM_BEEP_CLK_FREQ / A4)/ 20);
           vTaskDelay(M2T(MOTORS_TEST_ON_TIME_MS));
-          motorsBeep(m, false, 0, 0);
+          //motorsBeep(m, false, 0, 0);
           vTaskDelay(M2T(100));
         }
       }

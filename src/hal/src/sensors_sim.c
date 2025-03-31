@@ -23,6 +23,7 @@
 
 #include "system.h"
 #include "debug.h"
+#include "fsl_debug_console.h"
 
 #ifndef SITL_CF2
 /* Add a simulate driver for Zrange*/
@@ -172,6 +173,7 @@ bool sensorsSimAreCalibrated() {
 
 static void sensorsTask(void *param)
 {
+  PRINTF("Sensors task started\n");
   systemWaitStart();
 
   CRTPPacket p;

@@ -13,18 +13,52 @@
  #include "fsl_debug_console.h"
  #include "led.h"
  #include "cfassert.h"
+
+ #include "FreeRTOS.h"
+ #include "task.h"
  
  #define DONT_DISCARD __attribute__((used))
+
+ extern void vPortSVCHandler(void);
+ extern void xPortPendSVHandler(void);
+ extern void xPortSysTickHandler(void);
  
  /**
   * Initialize the NVIC (Nested Vectored Interrupt Controller)
   */
- void nvicInit(void)
- {
-     // The i.MX93 uses Cortex-M33, which has the same NVIC as M4
-     // Set priority grouping - all bits for preemption priority (like STM32's NVIC_PriorityGroup_4)
-     NVIC_SetPriorityGrouping(0);
- }
+  void nvicInit(void)
+  {
+      // Set priority grouping - all bits for preemption priority
+      NVIC_SetPriorityGrouping(0);
+      
+      // Configure PendSV with lowest priority as required by FreeRTOS
+      NVIC_SetPriority(PendSV_IRQn, 255);
+      
+      // Configure SysTick with next-to-lowest priority
+      NVIC_SetPriority(SysTick_IRQn, 254);
+      
+      // Configure SysTick to interrupt at the requested rate
+      // The tick rate is already defined in FreeRTOSConfigIMX93.h as 1000Hz
+      SysTick_Config(SystemCoreClock / configTICK_RATE_HZ);
+
+      PRINTF("nvicInit: NVIC initialized with SysTick at %dHz\n", configTICK_RATE_HZ);
+  }
+
+/**
+ * @brief  This function handles SVC exception.
+ */
+//  void DONT_DISCARD SVC_Handler(void)
+//  {
+//      vPortSVCHandler();
+//  }
+
+ /**
+ * @brief  This function handles PendSV exception.
+ */
+// void DONT_DISCARD PendSV_Handler(void)
+// {
+//     xPortPendSVHandler();
+// }
  
  /**
   * @brief  This function handles SysTick Handler.

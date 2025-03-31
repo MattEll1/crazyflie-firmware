@@ -50,6 +50,8 @@
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
+#include "fsl_debug_console.h"
+
 /**
  * The FreeRTOS Cortex M33 port can be configured to run on the Secure Side only
  * i.e. the processor boots as secure and never jumps to the non-secure side.
@@ -1032,6 +1034,9 @@ void SysTick_Handler( void ) /* PRIVILEGED_FUNCTION */
 
 void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTION portDONT_DISCARD */
 {
+    PRINTF("Debug: Entered vPortSVCHandler_C\n");
+    PRINTF("Debug: Stack at %p, PC value: 0x%08x\n", 
+           pulCallerStackAddress, pulCallerStackAddress[6]);
     #if ( ( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ) )
         #if defined( __ARMCC_VERSION )
 
@@ -1154,6 +1159,178 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
             configASSERT( pdFALSE );
     }
 }
+
+// void vPortSVCHandler_C(uint32_t *pulCallerStackAddress) /* PRIVILEGED_FUNCTION portDONT_DISCARD */
+// {
+//     PRINTF("Debug: Entered vPortSVCHandler_C\n");
+//     PRINTF("Debug: Stack at %p\n", pulCallerStackAddress);
+    
+//     #if (( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ))
+//         #if defined( __ARMCC_VERSION )
+//             /* Declaration when these variable are defined in code instead of being
+//              * exported from linker scripts. */
+//             extern uint32_t * __syscalls_flash_start__;
+//             extern uint32_t * __syscalls_flash_end__;
+//         #else
+//             /* Declaration when these variable are exported from linker scripts. */
+//             extern uint32_t __syscalls_flash_start__[];
+//             extern uint32_t __syscalls_flash_end__[];
+//         #endif /* defined( __ARMCC_VERSION ) */
+//     #endif /* ( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ) */
+
+//     uint32_t ulPC;
+    
+//     #if (configENABLE_TRUSTZONE == 1)
+//         uint32_t ulR0, ulR1;
+//         extern TaskHandle_t pxCurrentTCB;
+//         #if (configENABLE_MPU == 1)
+//             uint32_t ulControl, ulIsTaskPrivileged;
+//         #endif /* configENABLE_MPU */
+//     #endif /* configENABLE_TRUSTZONE */
+    
+//     uint8_t ucSVCNumber;
+
+//     /* Print register values from stack frame */
+//     PRINTF("Debug: R0=%08x R1=%08x R2=%08x R3=%08x\n",
+//            (unsigned int)pulCallerStackAddress[0],
+//            (unsigned int)pulCallerStackAddress[1],
+//            (unsigned int)pulCallerStackAddress[2],
+//            (unsigned int)pulCallerStackAddress[3]);
+//     PRINTF("Debug: R12=%08x LR=%08x PC=%08x PSR=%08x\n",
+//            (unsigned int)pulCallerStackAddress[4],
+//            (unsigned int)pulCallerStackAddress[5],
+//            (unsigned int)pulCallerStackAddress[6],
+//            (unsigned int)pulCallerStackAddress[7]);
+
+//     /* Register are stored on the stack in the following order - R0, R1, R2, R3,
+//      * R12, LR, PC, xPSR. */
+//     ulPC = pulCallerStackAddress[portOFFSET_TO_PC];
+//     PRINTF("Debug: PC value from stack: 0x%08x\n", (unsigned int)ulPC);
+    
+//     /* Verify PC is a valid address before dereferencing */
+//     if (ulPC < 0x1000) {
+//         PRINTF("Debug: ERROR - PC points to very low memory, possibly invalid: 0x%08x\n", 
+//                (unsigned int)ulPC);
+//         /* Safe failure - don't try to read from potentially invalid memory */
+//         return;
+//     }
+    
+//     /* Extract SVC number - this comes from the instruction before the return address */
+//     PRINTF("Debug: Attempting to read SVC instruction bytes\n");
+//     ucSVCNumber = ((uint8_t *)ulPC)[-2];
+//     PRINTF("Debug: SVC Number extracted: %d (0x%02x)\n", 
+//            (unsigned int)ucSVCNumber, (unsigned int)ucSVCNumber);
+    
+//     PRINTF("Debug: portSVC_START_SCHEDULER defined as: %d\n", portSVC_START_SCHEDULER);
+//     PRINTF("Debug: Entering switch statement for SVC number\n");
+
+//     switch(ucSVCNumber)
+//     {
+//         #if (configENABLE_TRUSTZONE == 1)
+//             case portSVC_ALLOCATE_SECURE_CONTEXT:
+//                 PRINTF("Debug: Case portSVC_ALLOCATE_SECURE_CONTEXT\n");
+                
+//                 /* R0 contains the stack size passed as parameter to the
+//                  * vPortAllocateSecureContext function. */
+//                 ulR0 = pulCallerStackAddress[0];
+
+//                 #if (configENABLE_MPU == 1)
+//                 {
+//                     /* Read the CONTROL register value. */
+//                     __asm volatile ("mrs %0, control" : "=r" (ulControl));
+
+//                     /* The task that raised the SVC is privileged if Bit[0]
+//                      * in the CONTROL register is 0. */
+//                     ulIsTaskPrivileged = ((ulControl & portCONTROL_PRIVILEGED_MASK) == 0);
+
+//                     /* Allocate and load a context for the secure task. */
+//                     xSecureContext = SecureContext_AllocateContext(ulR0, ulIsTaskPrivileged, pxCurrentTCB);
+//                 }
+//                 #else /* if (configENABLE_MPU == 1) */
+//                 {
+//                     /* Allocate and load a context for the secure task. */
+//                     xSecureContext = SecureContext_AllocateContext(ulR0, pxCurrentTCB);
+//                 }
+//                 #endif /* configENABLE_MPU */
+
+//                 configASSERT(xSecureContext != securecontextINVALID_CONTEXT_ID);
+//                 SecureContext_LoadContext(xSecureContext, pxCurrentTCB);
+//                 break;
+
+//             case portSVC_FREE_SECURE_CONTEXT:
+//                 PRINTF("Debug: Case portSVC_FREE_SECURE_CONTEXT\n");
+                
+//                 /* R0 contains TCB being freed and R1 contains the secure
+//                  * context handle to be freed. */
+//                 ulR0 = pulCallerStackAddress[0];
+//                 ulR1 = pulCallerStackAddress[1];
+
+//                 /* Free the secure context. */
+//                 SecureContext_FreeContext((SecureContextHandle_t)ulR1, (void *)ulR0);
+//                 break;
+//         #endif /* configENABLE_TRUSTZONE */
+
+//         case portSVC_START_SCHEDULER:
+//             PRINTF("Debug: Case portSVC_START_SCHEDULER\n");
+            
+//             #if (configENABLE_TRUSTZONE == 1)
+//             {
+//                 PRINTF("Debug: TrustZone initialization starting\n");
+//                 /* De-prioritize the non-secure exceptions so that the
+//                  * non-secure pendSV runs at the lowest priority. */
+//                 SecureInit_DePrioritizeNSExceptions();
+
+//                 /* Initialize the secure context management system. */
+//                 SecureContext_Init();
+//                 PRINTF("Debug: TrustZone initialization completed\n");
+//             }
+//             #endif /* configENABLE_TRUSTZONE */
+
+//             #if (configENABLE_FPU == 1)
+//             {
+//                 PRINTF("Debug: Setting up FPU\n");
+//                 /* Setup the Floating Point Unit (FPU). */
+//                 prvSetupFPU();
+//                 PRINTF("Debug: FPU setup completed\n");
+//             }
+//             #endif /* configENABLE_FPU */
+
+//             /* Setup the context of the first task so that the first task starts
+//              * executing. */
+//             PRINTF("Debug: About to call vRestoreContextOfFirstTask\n");
+//             vRestoreContextOfFirstTask();
+//             PRINTF("Debug: Returned from vRestoreContextOfFirstTask (shouldn't happen)\n");
+//             break;
+
+//         #if ((configENABLE_MPU == 1) && (configUSE_MPU_WRAPPERS_V1 == 1))
+//             case portSVC_RAISE_PRIVILEGE:
+//                 PRINTF("Debug: Case portSVC_RAISE_PRIVILEGE\n");
+                
+//                 /* Only raise the privilege, if the svc was raised from any of
+//                  * the system calls. */
+//                 if ((ulPC >= (uint32_t)__syscalls_flash_start__) &&
+//                     (ulPC <= (uint32_t)__syscalls_flash_end__))
+//                 {
+//                     vRaisePrivilege();
+//                 }
+//                 break;
+//         #endif /* (configENABLE_MPU == 1) && (configUSE_MPU_WRAPPERS_V1 == 1) */
+
+//         #if (configENABLE_MPU == 1)
+//             case portSVC_YIELD:
+//                 PRINTF("Debug: Case portSVC_YIELD\n");
+//                 vPortYield();
+//                 break;
+//         #endif /* configENABLE_MPU == 1 */
+
+//         default:
+//             PRINTF("Debug: ERROR - Unknown SVC number: %d\n", (unsigned int)ucSVCNumber);
+//             configASSERT(pdFALSE);
+//     }
+    
+//     PRINTF("Debug: Exiting vPortSVCHandler_C (shouldn't reach here)\n");
+// }
+
 /*-----------------------------------------------------------*/
 
 #if ( ( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 0 ) )
@@ -1540,22 +1717,38 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
                                          TaskFunction_t pxCode,
                                          void * pvParameters ) /* PRIVILEGED_FUNCTION */
     {
+        //PRINTF("Debug: pxPortInitialiseStack - Starting stack initialization\n");
+        //PRINTF("Debug: pxTopOfStack=%08x pxEndOfStack=%08x\n", 
+               //(unsigned int)pxTopOfStack, (unsigned int)pxEndOfStack);
         /* Simulate the stack frame as it would be created by a context switch
          * interrupt. */
         #if ( portPRELOAD_REGISTERS == 0 )
         {
+            //PRINTF("Debug: Using minimal stack initialization (portPRELOAD_REGISTERS=0)\n");
             pxTopOfStack--;                                          /* Offset added to account for the way the MCU uses the stack on entry/exit of interrupts. */
-            *pxTopOfStack = portINITIAL_XPSR;                        /* xPSR. */
+            *pxTopOfStack = portINITIAL_XPSR;
+            //PRINTF("Debug: Stack[0]=%08x (xPSR)\n", (unsigned int)*pxTopOfStack);
+                                    /* xPSR. */
             pxTopOfStack--;
-            *pxTopOfStack = ( StackType_t ) pxCode;                  /* PC. */
+            *pxTopOfStack = ( StackType_t ) pxCode;
+            //PRINTF("Debug: Stack[1]=%08x (PC)\n", (unsigned int)*pxTopOfStack);
+                              /* PC. */
             pxTopOfStack--;
-            *pxTopOfStack = ( StackType_t ) portTASK_RETURN_ADDRESS; /* LR. */
+            *pxTopOfStack = ( StackType_t ) portTASK_RETURN_ADDRESS;
+            //PRINTF("Debug: Stack[2]=%08x (LR)\n", (unsigned int)*pxTopOfStack);
+             /* LR. */
             pxTopOfStack -= 5;                                       /* R12, R3, R2 and R1. */
-            *pxTopOfStack = ( StackType_t ) pvParameters;            /* R0. */
+            *pxTopOfStack = ( StackType_t ) pvParameters; 
+            //PRINTF("Debug: Stack[7]=%08x (R0/pvParameters)\n", (unsigned int)*pxTopOfStack);
+                       /* R0. */
             pxTopOfStack -= 9;                                       /* R11..R4, EXC_RETURN. */
             *pxTopOfStack = portINITIAL_EXC_RETURN;
+            //PRINTF("Debug: Stack[16]=%08x (EXC_RETURN=0x%08x)\n", 
+                   //(unsigned int)*pxTopOfStack, (unsigned int)portINITIAL_EXC_RETURN);
+                   
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) pxEndOfStack; /* Slot used to hold this task's PSPLIM value. */
+            //PRINTF("Debug: Stack[17]=%08x (PSPLIM)\n", (unsigned int)*pxTopOfStack);
 
             #if ( configENABLE_TRUSTZONE == 1 )
             {
@@ -1563,15 +1756,23 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
                 *pxTopOfStack = portNO_SECURE_CONTEXT; /* Slot used to hold this task's xSecureContext value. */
             }
             #endif /* configENABLE_TRUSTZONE */
+            //PRINTF("Debug: Final pxTopOfStack=%08x\n", (unsigned int)pxTopOfStack);
         }
         #else /* portPRELOAD_REGISTERS */
         {
+            //PRINTF("Debug: Using full register preload (portPRELOAD_REGISTERS=1)\n");
             pxTopOfStack--;                                          /* Offset added to account for the way the MCU uses the stack on entry/exit of interrupts. */
             *pxTopOfStack = portINITIAL_XPSR;                        /* xPSR. */
+            //PRINTF("Debug: Stack[0]=%08x (xPSR)\n", (unsigned int)*pxTopOfStack);
+
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) pxCode;                  /* PC. */
+            //PRINTF("Debug: Stack[1]=%08x (PC)\n", (unsigned int)*pxTopOfStack);
+
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) portTASK_RETURN_ADDRESS; /* LR. */
+            //PRINTF("Debug: Stack[2]=%08x (LR)\n", (unsigned int)*pxTopOfStack);
+
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) 0x12121212UL;            /* R12. */
             pxTopOfStack--;
@@ -1582,6 +1783,8 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
             *pxTopOfStack = ( StackType_t ) 0x01010101UL;            /* R1. */
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) pvParameters;            /* R0. */
+            //PRINTF("Debug: Stack[7]=%08x (R0/pvParameters)\n", (unsigned int)*pxTopOfStack);
+
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) 0x11111111UL;            /* R11. */
             pxTopOfStack--;
@@ -1600,8 +1803,12 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
             *pxTopOfStack = ( StackType_t ) 0x04040404UL;            /* R04. */
             pxTopOfStack--;
             *pxTopOfStack = portINITIAL_EXC_RETURN;                  /* EXC_RETURN. */
+            // PRINTF("Debug: Stack[16]=%08x (EXC_RETURN=0x%08x)\n", 
+            //        (unsigned int)*pxTopOfStack, (unsigned int)portINITIAL_EXC_RETURN);
+
             pxTopOfStack--;
             *pxTopOfStack = ( StackType_t ) pxEndOfStack;            /* Slot used to hold this task's PSPLIM value. */
+            //PRINTF("Debug: Stack[17]=%08x (PSPLIM)\n", (unsigned int)*pxTopOfStack);
 
             #if ( configENABLE_TRUSTZONE == 1 )
             {
@@ -1609,6 +1816,7 @@ void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTIO
                 *pxTopOfStack = portNO_SECURE_CONTEXT; /* Slot used to hold this task's xSecureContext value. */
             }
             #endif /* configENABLE_TRUSTZONE */
+            //PRINTF("Debug: Final pxTopOfStack=%08x\n", (unsigned int)pxTopOfStack);
         }
         #endif /* portPRELOAD_REGISTERS */
 
@@ -1755,6 +1963,12 @@ BaseType_t xPortStartScheduler( void ) /* PRIVILEGED_FUNCTION */
     #endif /* ( ( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 0 ) ) */
 
     /* Start the first task. */
+    // PRINTF("xPortStar: About to start first task\n");
+    // PRINTF("Debug - Vector table at: 0x%08x\n", SCB->VTOR);
+    // PRINTF("Debug - MSP value: 0x%08x\n", __get_MSP());
+    // PRINTF("Debug - PSP value: 0x%08x\n", __get_PSP());
+    // PRINTF("Debug - First stack entry: 0x%08x\n", *((uint32_t*)SCB->VTOR));
+    // PRINTF("Debug - SVC handler addr in vector: 0x%08x\n", *((uint32_t*)(SCB->VTOR + 0x2C)));
     vStartFirstTask();
 
     /* Should never get here as the tasks will now be executing. Call the task

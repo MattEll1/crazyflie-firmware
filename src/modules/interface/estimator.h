@@ -31,8 +31,10 @@
 typedef enum {
   anyEstimator = 0,
   complementaryEstimator,
+#ifndef DISABLE_KALMAN_ESTIMATOR
   kalmanEstimator,
-  StateEstimatorTypeCount,
+#endif
+  StateEstimatorTypeCount
 } StateEstimatorType;
 
 void stateEstimatorInit(StateEstimatorType estimator);

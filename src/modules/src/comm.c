@@ -62,7 +62,9 @@ void commInit(void)
   platformserviceInit();
   logInit();
   paramInit();
+  #ifndef DISABLE_KALMAN_ESTIMATOR
   locSrvInit();
+  #endif
 
   //setup CRTP communication channel
   //TODO: check for USB first and prefer USB over radio

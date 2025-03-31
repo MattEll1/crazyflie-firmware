@@ -92,42 +92,38 @@ void ConfigureCachesForDDR(void)
 
 int main() 
 {
-  // BOARD_InitHardware();
-  // PRINTF("Debug console initialized\n");
-  // PRINTF("UCM-iMX93 Crazyflie Firmware Starting\n");
+  BOARD_InitHardware();
+  PRINTF("main: Debug console initialized\n");
+  PRINTF("main: UCM-iMX93 Crazyflie Firmware Starting\n");
 
-  // //Initialize the platform.
-  // int err = platformInit();
-  // PRINTF("Platform initialization %s (error code: %d)\n", err == 0 ? "successful" : "failed", err);
+  //Initialize the platform.
+  int err = platformInit();
+  PRINTF("main: Platform initialization %s (error code: %d)\n", err == 0 ? "successful" : "failed", err);
 
-  // if (err != 0) {
-  //   // The firmware is running on the wrong hardware. Halt
-  //   while(1);
-  // }
+  if (err != 0) {
+    // The firmware is running on the wrong hardware. Halt
+    while(1);
+  }
 
-  // PRINTF("Launching system\n");
-  // //Launch the system task that will initialize and start everything
-  // systemLaunch();
-  // PRINTF("Launching system sucessful!\n");
+  PRINTF("main: Launching system\n");
+  //Launch the system task that will initialize and start everything
+  systemLaunch();
+  PRINTF("main: Launching system sucessful!\n");
 
-  // PRINTF("Starting FreeRTOS schedueler...\n");
-  // //Start the FreeRTOS scheduler
-  // vTaskStartScheduler();
+  PRINTF("main: Starting FreeRTOS schedueler...\n");
+  //Start the FreeRTOS scheduler
+  vTaskStartScheduler();
 
-  // PRINTF("Schedueler failed! Should not reach this point\n");
+  PRINTF("main: Schedueler failed! Should not reach this point\n");
   // //TODO: Move to platform launch failed
   // ledInit();
   // ledSet(0, 1);
   // ledSet(1, 1);
 
-  // //Should never reach this point!
-  // while(1);
+  //Should never reach this point!
+  while(1);
 
-  // return 0;
-  ConfigureCachesForDDR();
-  BOARD_InitHardware();
-  PRINTF("Debug console initialized\n");
-  PRINTF("UCM-iMX93 Crazyflie Firmware Starting\n");
+  return 0;
 
 }
 

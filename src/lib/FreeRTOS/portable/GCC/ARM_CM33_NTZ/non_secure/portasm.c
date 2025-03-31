@@ -47,6 +47,14 @@
 
     void vRestoreContextOfFirstTask( void ) /* __attribute__ (( naked )) PRIVILEGED_FUNCTION */
     {
+        extern TCB_t *pxCurrentTCB;
+        extern void prvTaskExitError(void);
+        
+        // Print debug info about the first task
+        PRINTF("First task: %s (prio %d)\n", 
+               pxCurrentTCB->pcTaskName, 
+               (int)pxCurrentTCB->uxPriority);
+               
         __asm volatile
         (
             " .syntax unified                                 \n"

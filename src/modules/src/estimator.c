@@ -4,7 +4,10 @@
 #include "cfassert.h"
 #include "estimator.h"
 #include "estimator_complementary.h"
+
+#ifndef DISABLE_KALMAN_ESTIMATOR
 #include "estimator_kalman.h"
+#endif
 
 #define DEFAULT_ESTIMATOR complementaryEstimator
 static StateEstimatorType currentEstimator = anyEstimator;
@@ -20,7 +23,9 @@ typedef struct {
 static EstimatorFcns estimatorFunctions[] = {
   {.init = 0, .test = 0, .update = 0}, // Any
   {.init = estimatorComplementaryInit, .test = estimatorComplementaryTest, .update = estimatorComplementary},
+  #ifndef DISABLE_KALMAN_ESTIMATOR
   {.init = estimatorKalmanInit, .test = estimatorKalmanTest, .update = estimatorKalman},
+  #endif
 };
 
 
@@ -31,6 +36,13 @@ void stateEstimatorInit(StateEstimatorType estimator) {
 
   currentEstimator = estimator;
 
+#ifdef DISABLE_KALMAN_ESTIMATOR
+  // Force complementary estimator if Kalman was requested
+  if (currentEstimator == StateEstimatorTypeCount - 1) {  // This would have been kalmanEstimator
+    currentEstimator = complementaryEstimator;
+  }
+#endif
+
   if (anyEstimator == currentEstimator) {
     currentEstimator = DEFAULT_ESTIMATOR;
   }
@@ -40,6 +52,13 @@ void stateEstimatorInit(StateEstimatorType estimator) {
     DEBUG_PRINT("Estimator type forced\n");
     currentEstimator = forcedEstimator;
   }
+
+#ifdef DISABLE_KALMAN_ESTIMATOR
+  // Final safety check
+  if (currentEstimator >= StateEstimatorTypeCount) {
+    currentEstimator = complementaryEstimator;
+  }
+#endif
 
   initEstimator();
 

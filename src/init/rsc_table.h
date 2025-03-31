@@ -22,7 +22,7 @@
 //  #define RL_BUFFER_COUNT      (256U)
 //  #define VRING_SIZE           (0x8000U)
 
-#define RESOURCE_TABLE_START 0x90000000U
+#define RESOURCE_TABLE_START 0x2001E000U
 #define RESOURCE_TABLE_SIZE  0x1000U
 
 void copyResourceTable(void);

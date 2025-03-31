@@ -107,13 +107,19 @@ CRT0 = startup_MIMX9352_cm33.o system_MIMX9352_cm33.o
 # Add imx93 object files
 -include $(IMX93_OBJ_DIR)/imx93_obj.mk
 
-CFLAGS += -include src/config/FreeRTOSConfigIMX93.h
+#CFLAGS += -include src/config/FreeRTOSConfigIMX93.h
 
 PROCESSOR = -mcpu=cortex-m33 -mthumb -mfloat-abi=hard -mfpu=fpv5-sp-d16
 CFLAGS += -fno-math-errno -DARM_MATH_CM33 -D__FPU_PRESENT=1 -D__DSP_PRESENT=1 -D__VTOR_PRESENT=1 -DIMX93 -DCPU_MIMX9352DVVXM_cm33
 
-LOAD_ADDRESS_imx933 = 0x90000000
+LOAD_ADDRESS_imx933 = 0x0FFE0478
 LOAD_ADDRESS_CLOAD_imx933 = 0x0FFE0478
+
+  # Add HITL flag for iMX93 HITL builds
+  ifeq ($(HITL), 1)
+    CFLAGS += -DHITL
+  endif
+
 endif
 
 
@@ -133,13 +139,17 @@ MEMMANG_OBJ = heap_4.o
 
 VPATH += $(FREERTOS)
 FREERTOS_OBJ = list.o tasks.o queue.o timers.o $(MEMMANG_OBJ)
+VPATH := $(filter-out %/bkp, $(VPATH))
+VPATH := $(filter-out %/include_bkp, $(VPATH))
 
-#FatFS
-VPATH += $(LIB)/FatFS
-PROJ_OBJ += diskio.o ff.o syscall.o unicode.o fatfs_sd.o
-ifeq ($(FATFS_DISKIO_TESTS), 1)
-PROJ_OBJ += diskio_function_tests.o
-CFLAGS += -DUSD_RUN_DISKIO_FUNCTION_TESTS
+ifeq ($(CPU), stm32f4)
+	# FatFS
+		VPATH += $(LIB)/FatFS
+		PROJ_OBJ += diskio.o ff.o syscall.o unicode.o fatfs_sd.o
+		ifeq ($(FATFS_DISKIO_TESTS), 1)
+		PROJ_OBJ += diskio_function_tests.o
+		CFLAGS += -DUSD_RUN_DISKIO_FUNCTION_TESTS
+	endif
 endif
 
 # Crazyflie sources
@@ -213,13 +223,14 @@ PROJ_OBJ += range.o
 
 # Stabilizer modules
 PROJ_OBJ += commander.o crtp_commander.o crtp_commander_rpyt.o
-PROJ_OBJ += crtp_commander_generic.o crtp_localization_service.o
+PROJ_OBJ += crtp_commander_generic.o 
+#PROJ_OBJ += crtp_localization_service.o
 PROJ_OBJ += attitude_pid_controller.o sensfusion6.o stabilizer.o
 PROJ_OBJ += position_estimator_altitude.o position_controller_pid.o
 PROJ_OBJ += estimator.o estimator_complementary.o
 PROJ_OBJ += controller.o controller_pid.o controller_mellinger.o
 PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
-PROJ_OBJ += estimator_kalman.o
+#PROJ_OBJ += estimator_kalman.o
 
 # High-Level Commander
 PROJ_OBJ += crtp_commander_high_level.o planner.o pptraj.o
@@ -320,6 +331,8 @@ INCLUDES += -I$(LIB)/CMSIS/iMX93/Include/periph
 INCLUDES += -I$(LIB)/rpmsg-lite/lib/include
 INCLUDES += -I$(LIB)/rpmsg-lite/lib/include/environment/freertos
 INCLUDES += -I$(LIB)/rpmsg-lite/lib/include/platform/imx93_m33
+INCLUDES := $(filter-out -I%/bkp, $(INCLUDES))
+INCLUDES := $(filter-out -I%/include_bkp, $(INCLUDES))
 #INCLUDES  = -I$(FREERTOS)/include/freertos_m33 
 
 
@@ -364,7 +377,7 @@ endif
 CFLAGS += $(PROCESSOR) $(INCLUDES)
 
 
-CFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing $(C_PROFILE) -std=gnu11
+CFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing $(C_PROFILE) -std=gnu11 -Os
 # Compiler flags to generate dependency files:
 CFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
 #Permits to remove un-used functions and global variables from output file

@@ -33,12 +33,13 @@
 #include "semphr.h"
 
 #include "debug.h"
+#include "fsl_debug_console.h"
 #include "version.h"
 #include "config.h"
 #include "param.h"
 #include "log.h"
-#include "ledseq.h"
-#include "pm.h"
+//#include "ledseq.h"
+//#include "pm.h"
 
 #include "config.h"
 #include "system.h"
@@ -54,14 +55,14 @@
 #include "commander.h"
 #include "console.h"
 #include "usblink.h"
-#include "mem.h"
-#include "proximity.h"
+//#include "mem.h"
+//#include "proximity.h"
 #include "watchdog.h"
 #include "queuemonitor.h"
-#include "buzzer.h"
-#include "sound.h"
+//#include "buzzer.h"
+//#include "sound.h"
 #include "sysload.h"
-#include "deck.h"
+// #include "deck.h"
 #include "extrx.h"
 
 #ifdef IMX93
@@ -82,9 +83,11 @@ static void systemTask(void *arg);
 /* Public functions */
 void systemLaunch(void)
 {
+  //PRINTF("systemLaunch: Creating xTask for system\n");
   xTaskCreate(systemTask, SYSTEM_TASK_NAME,
               SYSTEM_TASK_STACKSIZE, NULL,
               SYSTEM_TASK_PRI, NULL);
+  //PRINTF("systemLaunch: xTaskCreate successful\n");
 
 }
 
@@ -123,22 +126,24 @@ void systemInit(void)
   #endif
   configblockInit();
   workerInit();
-  adcInit();
-  ledseqInit();
-  pmInit();
-  buzzerInit();
+  //adcInit();
+  // ledseqInit(); //3020: LED sequence will be completely different for ucm-imx93
+  // pmInit();  //3020: Battery management not needed for sim
+  // buzzerInit(); //3020: Buzzer not needed
 
   isInit = true;
+  PRINTF("systemInit: system initialized\n");
 }
 
 bool systemTest()
 {
   bool pass=isInit;
 
-  pass &= ledseqTest();
-  pass &= pmTest();
+  //pass &= ledseqTest();
+  //pass &= pmTest();
   pass &= workerTest();
-  pass &= buzzerTest();
+  //pass &= buzzerTest();
+  PRINTF("systemInit: system test passed\n");
   return pass;
 }
 
@@ -148,8 +153,8 @@ void systemTask(void *arg)
 {
   bool pass = true;
 
-  ledInit();
-  ledSet(CHG_LED, 1);
+  //ledInit();
+  //ledSet(CHG_LED, 1);
 
 #ifdef DEBUG_QUEUE_MONITOR
   queueMonitorInit();
@@ -167,20 +172,22 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
 
-  StateEstimatorType estimator = anyEstimator;
-  deckInit();
-  estimator = deckGetRequiredEstimator();
-  stabilizerInit(estimator);
-  if (deckGetRequiredLowInterferenceRadioMode() && platformConfigPhysicalLayoutAntennasAreClose())
-  {
-    platformSetLowInterferenceRadioMode();
-  }
-  soundInit();
-  memInit();
+  //StateEstimatorType estimator = anyEstimator;
 
-#ifdef PROXIMITY_ENABLED
-  proximityInit();
-#endif
+  // deckInit(); //3020: Deck not needed
+  // estimator = deckGetRequiredEstimator();
+  stabilizerInit(anyEstimator);
+  // if (deckGetRequiredLowInterferenceRadioMode() && platformConfigPhysicalLayoutAntennasAreClose())
+  // {
+  //   platformSetLowInterferenceRadioMode();
+  // }
+  // soundInit();  //3020: Sound not needed
+  //memInit();   //3020: This is a function specifically to access mem on a real CF. Not need.
+
+  //3020: Proximity not needed
+// #ifdef PROXIMITY_ENABLED
+//   proximityInit();
+// #endif
 
   //Test the modules
   pass &= systemTest();
@@ -188,9 +195,9 @@ void systemTask(void *arg)
   pass &= commTest();
   pass &= commanderTest();
   pass &= stabilizerTest();
-  pass &= deckTest();
-  pass &= soundTest();
-  pass &= memTest();
+  //pass &= deckTest();
+  //pass &= soundTest();
+  //pass &= memTest();
   pass &= watchdogNormalStartTest();
 
   //Start the firmware
@@ -198,9 +205,9 @@ void systemTask(void *arg)
   {
     selftestPassed = 1;
     systemStart();
-    soundSetEffect(SND_STARTUP);
-    ledseqRun(SYS_LED, seq_alive);
-    ledseqRun(LINK_LED, seq_testPassed);
+    //soundSetEffect(SND_STARTUP);
+    //ledseqRun(SYS_LED, seq_alive);
+    //ledseqRun(LINK_LED, seq_testPassed);
   }
   else
   {
@@ -209,7 +216,7 @@ void systemTask(void *arg)
     {
       while(1)
       {
-        ledseqRun(SYS_LED, seq_testPassed); //Red passed == not passed!
+        //ledseqRun(SYS_LED, seq_testPassed); //Red passed == not passed!
         vTaskDelay(M2T(2000));
         // System can be forced to start by setting the param to 1 from the cfclient
         if (selftestPassed)
@@ -222,8 +229,8 @@ void systemTask(void *arg)
     }
     else
     {
-      ledInit();
-      ledSet(SYS_LED, true);
+      //ledInit();
+      //ledSet(SYS_LED, true);
     }
   }
   DEBUG_PRINT("Free heap: %d bytes\n", xPortGetFreeHeapSize());
@@ -266,6 +273,7 @@ bool systemCanFly(void)
   return canFly;
 }
 
+
 void vApplicationIdleHook( void )
 {
   static uint32_t tickOfLatestWatchdogReset = M2T(0);
@@ -278,6 +286,7 @@ void vApplicationIdleHook( void )
     watchdogReset();
   }
 
+  
   // Enter sleep mode. Does not work when debugging chip with SWD.
   // Currently saves about 20mA STM32F405 current consumption (~30%).
 #ifndef DEBUG

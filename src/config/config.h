@@ -91,20 +91,20 @@
 // Task priorities. Higher number higher priority
 #define STABILIZER_TASK_PRI     5
 #define SENSORS_TASK_PRI        4
-#define ADC_TASK_PRI            3
-#define FLOW_TASK_PRI           3
-#define MULTIRANGER_TASK_PRI    3
+//#define ADC_TASK_PRI            3
+// #define FLOW_TASK_PRI           3
+// #define MULTIRANGER_TASK_PRI    3
 #define SYSTEM_TASK_PRI         2
 #define CRTP_TX_TASK_PRI        2
 #define CRTP_RX_TASK_PRI        2
 #define EXTRX_TASK_PRI          2
-#define ZRANGER_TASK_PRI        2
-#define ZRANGER2_TASK_PRI       2
+// #define ZRANGER_TASK_PRI        2
+// #define ZRANGER2_TASK_PRI       2
 #define LOG_TASK_PRI            1
-#define MEM_TASK_PRI            1
+//#define MEM_TASK_PRI            1
 #define PARAM_TASK_PRI          1
-#define PROXIMITY_TASK_PRI      0
-#define PM_TASK_PRI             0
+//#define PROXIMITY_TASK_PRI      0
+//#define PM_TASK_PRI             0
 #define USDLOG_TASK_PRI         1
 #define USDWRITE_TASK_PRI       0
 #define PCA9685_TASK_PRI        3
@@ -179,6 +179,10 @@
 #define CMD_HIGH_LEVEL_TASK_STACKSIZE configMINIMAL_STACK_SIZE
 #define MULTIRANGER_TASK_STACKSIZE    (2 * configMINIMAL_STACK_SIZE)
 #define VERIF_TASK_STACKSIZE          (100 * configMINIMAL_STACK_SIZE)   
+
+
+//3020: flags for disabling things not needed for the project
+#define DISABLE_KALMAN_ESTIMATOR 1
 
 //The radio channel. From 0 to 125
 #define RADIO_CHANNEL 80

@@ -181,20 +181,22 @@ static void extPositionPackedHandler(CRTPPacket* pk)
 
 bool getExtPosition(state_t *state)
 {
-  // Only use position information if it's valid, recent, and if the kalman filter is enabled
-  if (getStateEstimator() == kalmanEstimator && 
-      (xTaskGetTickCount() - crtpExtPosCache.timestamp) < M2T(5)) {
-    // Get the updated position from the mocap
-    ext_pos.x = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].x;
-    ext_pos.y = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].y;
-    ext_pos.z = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].z;
-    ext_pos.stdDev = 0.01;
-    estimatorKalmanEnqueuePosition(&ext_pos);
-
-    return true;
+  #ifndef DISABLE_KALMAN_ESTIMATOR
+    // Only use position information if it's valid, recent, and if the kalman filter is enabled
+    if (getStateEstimator() == kalmanEstimator && 
+        (xTaskGetTickCount() - crtpExtPosCache.timestamp) < M2T(5)) {
+      // Get the updated position from the mocap
+      ext_pos.x = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].x;
+      ext_pos.y = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].y;
+      ext_pos.z = crtpExtPosCache.targetVal[crtpExtPosCache.activeSide].z;
+      ext_pos.stdDev = 0.01;
+      estimatorKalmanEnqueuePosition(&ext_pos);
+  
+      return true;
+    }
+  #endif
+    return false;
   }
-  return false;
-}
 
 void locSrvSendPacket(locsrv_t type, uint8_t *data, uint8_t length)
 {

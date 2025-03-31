@@ -27,21 +27,42 @@
 
 #include <string.h>
 #include "platform.h"
+#include "fsl_debug_console.h"
 
 static const platformConfig_t* active_config = 0;
 
 int platformInit(void) {
   int nrOfConfigs = 0;
+  
+  //PRINTF("platformInit: Starting platform initialization\n");
   const platformConfig_t* configs = platformGetListOfConfigurations(&nrOfConfigs);
 
+  //PRINTF("platformInit: Found %d platform configurations\n", nrOfConfigs);
+  // Print available configurations
+  // for (int i = 0; i < nrOfConfigs; i++) {
+  //   PRINTF("platformInit: Available config[%d]: deviceType='%s', name='%s'\n", 
+  //         i, configs[i].deviceType, configs[i].deviceTypeName);
+  // }
+  // // Get current device type
+  // char deviceTypeString[PLATFORM_DEVICE_TYPE_STRING_MAX_LEN];
+  // platformGetDeviceTypeString(deviceTypeString);
+  // PRINTF("platformInit: Device type string from hardware: '%s'\n", deviceTypeString);
+
+
+  
   int err = platformInitConfiguration(configs, nrOfConfigs);
+  //PRINTF("platformInit: platformInitConfiguration returned: %d (0=success, 1=failure)\n", err);
+  
   if (err != 0)
   {
     // This firmware is not compatible, abort init
+    //PRINTF("platformInit: ERROR - No matching configuration found for this device!\n");
     return 1;
   }
 
+  //PRINTF("platformInit: Configuration matched, initializing hardware...\n");
   platformInitHardware();
+  PRINTF("platformInit: Platform initialization complete\n");
   return 0;
 }
 
@@ -75,17 +96,25 @@ int platformInitConfiguration(const platformConfig_t* configs, const int nrOfCon
   char deviceType[PLATFORM_DEVICE_TYPE_MAX_LEN];
 
   platformGetDeviceTypeString(deviceTypeString);
-  platformParseDeviceTypeString(deviceTypeString, deviceType);
+  int parseResult = platformParseDeviceTypeString(deviceTypeString, deviceType);
+  PRINTF("platformInitConfiguration: Raw deviceTypeString='%s', parsed deviceType='%s', parseResult=%d\n", 
+         deviceTypeString, deviceType, parseResult);
 #else
   #define xstr(s) str(s)
   #define str(s) #s
 
   char* deviceType = xstr(DEVICE_TYPE_STRING_FORCE);
+  PRINTF("platformInitConfiguration: Using forced device type: '%s'\n", deviceType);
 #endif
 
   for (int i = 0; i < nrOfConfigs; i++) {
     const platformConfig_t* config = &configs[i];
-    if (strcmp(config->deviceType, deviceType) == 0) {
+    int compareResult = strcmp(config->deviceType, deviceType);
+    PRINTF("platformInitConfiguration: Comparing deviceType='%s' with config[%d].deviceType='%s', result=%d (%s)\n", 
+           deviceType, i, config->deviceType, compareResult, 
+           (compareResult == 0) ? "MATCH" : "NO MATCH");
+    
+    if (compareResult == 0) {
       active_config = config;
       return 0;
     }
