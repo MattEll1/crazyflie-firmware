@@ -27,6 +27,7 @@
 #include "i2cdev.h"
 #include "pca9685.h"
 #include "math.h" // fmax, fmin
+#include "fsl_debug_console.h"
 
 // the pca9685 uses 8-bit internal addresses.
 enum Registers
@@ -189,6 +190,7 @@ static void asyncTask(__attribute__((unused)) void *param)
 
 bool pca9685startAsyncTask()
 {
+  PRINTF("Starting PCA9685 async task\n");
   queue = xQueueCreate(1, sizeof(struct asyncRequest));
   if (queue == 0) {
     return false;

@@ -41,6 +41,7 @@
 #define DEBUG_MODULE  "EXTRX"
 #include "debug.h"
 #include "log.h"
+#include "fsl_debug_console.h"
 
 #define ENABLE_CPPM
 #define ENABLE_EXTRX_LOG
@@ -70,7 +71,7 @@ static void extRxDecodeChannels(void);
 
 void extRxInit(void)
 {
-
+  PRINTF("Initializing external receiver\n");
   extrxSetpoint.mode.roll = modeAbs;
   extrxSetpoint.mode.pitch = modeAbs;
   extrxSetpoint.mode.yaw = modeVelocity;

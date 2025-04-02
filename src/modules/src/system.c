@@ -55,6 +55,7 @@
 #include "commander.h"
 #include "console.h"
 #include "usblink.h"
+#include "rpmsglink.h"
 //#include "mem.h"
 //#include "proximity.h"
 #include "watchdog.h"
@@ -87,7 +88,7 @@ void systemLaunch(void)
   xTaskCreate(systemTask, SYSTEM_TASK_NAME,
               SYSTEM_TASK_STACKSIZE, NULL,
               SYSTEM_TASK_PRI, NULL);
-  //PRINTF("systemLaunch: xTaskCreate successful\n");
+  PRINTF("systemLaunch: xTaskCreate successful\n");
 
 }
 
@@ -100,7 +101,12 @@ void systemInit(void)
   canStartMutex = xSemaphoreCreateMutex();
   xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  usblinkInit();
+  #ifdef IMX93
+    rpmsglinkInit();
+  #else
+    usblinkInit();
+  #endif
+
   sysLoadInit();
 
   /* Initialized here so that DEBUG_PRINT (buffered) can be used early */

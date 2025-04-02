@@ -54,6 +54,7 @@ such as: take-off, landing, polynomial trajectories.
 #include "planner.h"
 #include "log.h"
 #include "param.h"
+#include "fsl_debug_console.h"
 
 // Local types
 enum TrajectoryLocation_e {
@@ -179,6 +180,7 @@ bool isInGroup(uint8_t g) {
 
 void crtpCommanderHighLevelInit(void)
 {
+  PRINTF("CRTP Commander High Level init\n");
   if (isInit) {
     return;
   }

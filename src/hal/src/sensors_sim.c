@@ -297,6 +297,7 @@ static void sensorsDeviceInit(void)
 
 static void sensorsTaskInit(void)
 {
+  PRINTF("Sensors sim task init\n");
   // Use to have access to the sensors data
   dataReady = xSemaphoreCreateBinary();
 

@@ -41,6 +41,7 @@
 #include "queuemonitor.h"
 
 #include "log.h"
+#include "fsl_debug_console.h"
 
 
 static bool isInit;
@@ -83,6 +84,7 @@ static void updateStats();
 
 void crtpInit(void)
 {
+  PRINTF("Starting CRTP init\n");
   if(isInit)
     return;
 
@@ -95,6 +97,7 @@ void crtpInit(void)
               CRTP_RX_TASK_STACKSIZE, NULL, CRTP_RX_TASK_PRI, NULL);
 
   /* Start Rx/Tx tasks */
+  PRINTF("CRTP TX and RX initiated\n");
 
 
   isInit = true;

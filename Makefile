@@ -138,9 +138,15 @@ VPATH +=  $(FREERTOS)/portable/MemMang
 MEMMANG_OBJ = heap_4.o
 
 VPATH += $(FREERTOS)
-FREERTOS_OBJ = list.o tasks.o queue.o timers.o $(MEMMANG_OBJ)
+FREERTOS_OBJ = list.o tasks.o queue.o timers.o event_groups.o $(MEMMANG_OBJ)
 VPATH := $(filter-out %/bkp, $(VPATH))
 VPATH := $(filter-out %/include_bkp, $(VPATH))
+
+VPATH += $(LIB)/rpmsg-lite/lib/rpmsg_lite
+VPATH += $(LIB)/rpmsg-lite/lib/virtio
+VPATH += $(LIB)/rpmsg-lite/lib/common
+VPATH += $(LIB)/rpmsg-lite/lib/rpmsg_lite/porting/environment
+VPATH += $(LIB)/rpmsg-lite/lib/rpmsg_lite/porting/platform/imx93_m33
 
 ifeq ($(CPU), stm32f4)
 	# FatFS
@@ -200,8 +206,10 @@ PROJ_OBJ += fsl_debug_console.o fsl_adapter_lpuart.o fsl_lpuart.o fsl_clock.o
 PROJ_OBJ += fsl_assert.o fsl_common.o fsl_common_arm.o fsl_cache.o fsl_sbrk.o fsl_str.o
 PROJ_OBJ += led_imx93.o motors_imx93.o pm_imx93.o usec_time_imx93.o fsl_mu.o fsl_rgpio.o
 PROJ_OBJ += comm_imx93.o deck_imx93.o mem_imx93.o io_imx93.o sound_imx93.o
-PROJ_OBJ += board.o
-PROJ_OBJ += hardware_init.o pin_mux.o clock_config.o
+PROJ_OBJ += rpmsglink.o board.o
+PROJ_OBJ += hardware_init.o pin_mux.o clock_config.o 
+PROJ_OBJ += virtqueue.o llist.o
+PROJ_OBJ += rpmsg_lite.o rpmsg_queue.o rpmsg_ns.o rpmsg_env_freertos.o rpmsg_platform.o
 endif
 
 # vl53l1 lib
