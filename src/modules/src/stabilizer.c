@@ -113,7 +113,8 @@ void stabilizerInit(StateEstimatorType estimator)
 
   xTaskCreate(stabilizerTask, STABILIZER_TASK_NAME,
               STABILIZER_TASK_STACKSIZE, NULL, STABILIZER_TASK_PRI, NULL);
-
+  
+  PRINTF("Stabilizer Task running\r\n");
   isInit = true;
 }
 
@@ -152,7 +153,7 @@ static void stabilizerTask(void* param)
   static uint32_t heartbeatCounter = 0;
   vTaskSetApplicationTaskTag(0, (void*)TASK_STABILIZER_ID_NBR);
 
-  PRINTF("STAB: Task running\n"); 
+  // PRINTF("STAB: Task running\n"); 
 
   //Wait for the system to be fully started to start stabilization loop
   systemWaitStart();  
@@ -165,7 +166,7 @@ static void stabilizerTask(void* param)
   // Initialize tick to something else then 0
   tick = 1;
 
-  PRINTF("STAB: Task running\n"); 
+   
   while(1) {
     // The sensor should unlock at 1kHz
     sensorsWaitDataReady();

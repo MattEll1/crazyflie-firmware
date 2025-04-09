@@ -10,6 +10,7 @@
 
 #include "fsl_device_registers.h"
 #include "fsl_mu.h"
+#include "fsl_debug_console.h"
 
 #if defined(RL_USE_ENVIRONMENT_CONTEXT) && (RL_USE_ENVIRONMENT_CONTEXT == 1)
 #error "This RPMsg-Lite port requires RL_USE_ENVIRONMENT_CONTEXT set to 0"
@@ -35,6 +36,7 @@ static void platform_global_isr_enable(void)
 
 int32_t platform_init_interrupt(uint32_t vector_id, void *isr_data)
 {
+    // PRINTF("platform_init_interrupt: vector_id=%d, data=%p\n", vector_id, isr_data);
     /* Register ISR to environment layer */
     env_register_isr(vector_id, isr_data);
 
@@ -114,11 +116,21 @@ void platform_notify(uint32_t vector_id)
 int32_t MU1_A_IRQHandler(void)
 {
     uint32_t channel;
+    // uint32_t flags = MU_GetStatusFlags(RPMSG_LITE_M33_A55_MU);
+    // uint32_t checkFlag = ((uint32_t)kMU_Rx0FullFlag << RPMSG_MU_CHANNEL);
+
+    // PRINTF("MU1_A_IRQHandler: received MU interrupt, flags: 0x%X\n", (unsigned int)flags);
+    // PRINTF("MU1_A_IRQHandler: expected flag: 0x%X, condition match: %d\n", 
+        // (unsigned int)checkFlag, 
+        // (checkFlag & flags) != 0UL ? 1 : 0);
 
     if ((((uint32_t)kMU_Rx0FullFlag << RPMSG_MU_CHANNEL) & MU_GetStatusFlags(RPMSG_LITE_M33_A55_MU)) != 0UL)
     {
         channel = MU_ReceiveMsgNonBlocking(RPMSG_LITE_M33_A55_MU, RPMSG_MU_CHANNEL); // Read message from RX register.
+        // PRINTF("MU1_A_IRQHandler: received channel data: 0x%X\n", (unsigned int)channel);
         env_isr((uint32_t)((channel >> 16) | (RL_PLATFORM_IMX93_M33_A55_COM_ID << 3)));
+        // PRINTF("MU1_A_IRQHandler: Called env_isr with vector_id=0x%X\n", 
+        //     (unsigned int)((channel >> 16) | (RL_PLATFORM_IMX93_M33_A55_COM_ID << 3)));
     }
 
     return 0;
@@ -309,6 +321,7 @@ int32_t platform_init(void)
      * Prepare for the MU Interrupt
      *  MU must be initialized before rpmsg init is called
      */
+    // PRINTF("rpmsg_platforminit: RPMSG: MU Init\n");
     MU_Init(RPMSG_LITE_M33_A55_MU);
     NVIC_SetPriority(RPMSG_LITE_M33_A55_MU_IRQn, RPMSG_LITE_MU_IRQ_PRIORITY);
     NVIC_EnableIRQ(RPMSG_LITE_M33_A55_MU_IRQn);
@@ -320,9 +333,11 @@ int32_t platform_init(void)
     if (0 != env_create_mutex(&platform_lock, 1))
 #endif
     {
+        // PRINTF("rpmsg_platforminit: Failed\n");   
         return -1;
     }
 
+    // PRINTF("rpmsg_platforminit: success\n");  
     return 0;
 }
 

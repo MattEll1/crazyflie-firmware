@@ -78,4 +78,6 @@
     /* TCM ECC is enabled in default. Must initialize to use. */
     memset((void *)RESOURCE_TABLE_START, 0, RESOURCE_TABLE_SIZE);
     memcpy((void *)RESOURCE_TABLE_START, &resources, sizeof(resources));
+    PRINTF("copyResourceTable: Copying table from %p to %p (size: %x)\n", 
+       &resources, (void*)RESOURCE_TABLE_START, RESOURCE_TABLE_SIZE);
 }

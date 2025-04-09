@@ -53,7 +53,7 @@ SECTIONS
     . = ALIGN(8);
     KEEP(*(.resource_table)) /* Resource table */
     . = ALIGN(8);
-  } > m_rsc_tbl
+  } > m_text
 
 
   .interrupts :

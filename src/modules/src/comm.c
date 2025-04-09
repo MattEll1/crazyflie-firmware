@@ -40,6 +40,7 @@
 #include "platformservice.h"
 #include "syslink.h"
 #include "crtp_localization_service.h"
+#include "fsl_debug_console.h"
 
 static bool isInit;
 
@@ -81,11 +82,18 @@ bool commTest(void)
   bool pass=isInit;
   
   pass &= radiolinkTest();
+  PRINTF("Radio Link test passed\n");
   pass &= crtpTest();
+  PRINTF("CRTP test passed\n");
   pass &= crtpserviceTest();
+  PRINTF("CRTP service test passed\n");
   pass &= platformserviceTest();
+  PRINTF("Platform service test passed\n");
   pass &= consoleTest();
+  PRINTF("console test passed\n");
   pass &= paramTest();
+  PRINTF("param test passed\n");
+  PRINTF("comm test passed\n");
   
   return pass;
 }

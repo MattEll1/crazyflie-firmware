@@ -39,6 +39,7 @@
 #include "task.h"
 #include "timers.h"
 #include "event_groups.h"
+#include "fsl_debug_console.h"
 
 /* The MPU ports require MPU_WRAPPERS_INCLUDED_FROM_API_FILE to be defined
  * for the header files above, but not in this file, in order to generate the
@@ -320,6 +321,9 @@
         BaseType_t xWaitConditionMet, xAlreadyYielded;
         BaseType_t xTimeoutOccurred = pdFALSE;
 
+        // PRINTF("[EVENT_GROUP] WaitBits ENTRY - Group: %p, BitsToWait: 0x%x, ClearOnExit: %d, WaitForAll: %d, Timeout: %lu\r\n", 
+            // xEventGroup, (unsigned int)uxBitsToWaitFor, (int)xClearOnExit, (int)xWaitForAllBits, (unsigned long)xTicksToWait);
+
         traceENTER_xEventGroupWaitBits( xEventGroup, uxBitsToWaitFor, xClearOnExit, xWaitForAllBits, xTicksToWait );
 
         /* Check the user is not attempting to wait on the bits used by the kernel
@@ -337,8 +341,12 @@
         {
             const EventBits_t uxCurrentEventBits = pxEventBits->uxEventBits;
 
+            // PRINTF("[EVENT_GROUP] Current bits: 0x%x\r\n", (unsigned int)uxCurrentEventBits);
+
             /* Check to see if the wait condition is already met or not. */
             xWaitConditionMet = prvTestWaitCondition( uxCurrentEventBits, uxBitsToWaitFor, xWaitForAllBits );
+
+            // PRINTF("[EVENT_GROUP] Wait condition met: %d\r\n", (int)xWaitConditionMet);
 
             if( xWaitConditionMet != pdFALSE )
             {
@@ -347,10 +355,13 @@
                 uxReturn = uxCurrentEventBits;
                 xTicksToWait = ( TickType_t ) 0;
 
+                // PRINTF("[EVENT_GROUP] Condition already met, returning: 0x%x\r\n", (unsigned int)uxReturn);
+
                 /* Clear the wait bits if requested to do so. */
                 if( xClearOnExit != pdFALSE )
                 {
                     pxEventBits->uxEventBits &= ~uxBitsToWaitFor;
+                    // PRINTF("[EVENT_GROUP] Cleared bits on exit, new value: 0x%x\r\n", (unsigned int)pxEventBits->uxEventBits);
                 }
                 else
                 {
@@ -363,6 +374,8 @@
                  * specified, so just return the current value. */
                 uxReturn = uxCurrentEventBits;
                 xTimeoutOccurred = pdTRUE;
+
+                // PRINTF("[EVENT_GROUP] No wait time, returning current bits: 0x%x\r\n", (unsigned int)uxReturn);
             }
             else
             {
@@ -388,6 +401,8 @@
                     mtCOVERAGE_TEST_MARKER();
                 }
 
+                // PRINTF("[EVENT_GROUP] Will block with control bits: 0x%x\r\n", (unsigned int)uxControlBits);
+
                 /* Store the bits that the calling task is waiting for in the
                  * task's event list item so the kernel knows when a match is
                  * found.  Then enter the blocked state. */
@@ -407,6 +422,7 @@
         {
             if( xAlreadyYielded == pdFALSE )
             {
+                // PRINTF("[EVENT_GROUP] Yielding within API\r\n");
                 taskYIELD_WITHIN_API();
             }
             else
@@ -419,6 +435,7 @@
              * the required bits were set they will have been stored in the task's
              * event list item, and they should now be retrieved then cleared. */
             uxReturn = uxTaskResetEventItemValue();
+            // PRINTF("[EVENT_GROUP] Task unblocked, reset event item value: 0x%x\r\n", (unsigned int)uxReturn);
 
             if( ( uxReturn & eventUNBLOCKED_DUE_TO_BIT_SET ) == ( EventBits_t ) 0 )
             {
@@ -426,14 +443,18 @@
                 {
                     /* The task timed out, just return the current event bit value. */
                     uxReturn = pxEventBits->uxEventBits;
+                    // PRINTF("[EVENT_GROUP] Timeout occurred, current bits: 0x%x\r\n", (unsigned int)uxReturn);
 
                     /* It is possible that the event bits were updated between this
                      * task leaving the Blocked state and running again. */
                     if( prvTestWaitCondition( uxReturn, uxBitsToWaitFor, xWaitForAllBits ) != pdFALSE )
                     {
+                        // PRINTF("[EVENT_GROUP] Condition now met after timeout\r\n");
                         if( xClearOnExit != pdFALSE )
                         {
                             pxEventBits->uxEventBits &= ~uxBitsToWaitFor;
+                            // PRINTF("[EVENT_GROUP] Cleared bits on exit after timeout, new value: 0x%x\r\n", 
+                                // (unsigned int)pxEventBits->uxEventBits);
                         }
                         else
                         {
@@ -451,12 +472,15 @@
             }
             else
             {
+                // PRINTF("[EVENT_GROUP] Unblocked due to bit set\r\n");
                 /* The task unblocked because the bits were set. */
             }
 
             /* The task blocked so control bits may have been set. */
             uxReturn &= ~eventEVENT_BITS_CONTROL_BYTES;
         }
+        // PRINTF("[EVENT_GROUP] WaitBits EXIT - Returning: 0x%x, Timeout: %d\r\n", 
+            // (unsigned int)uxReturn, (int)xTimeoutOccurred);
 
         traceEVENT_GROUP_WAIT_BITS_END( xEventGroup, uxBitsToWaitFor, xTimeoutOccurred );
 

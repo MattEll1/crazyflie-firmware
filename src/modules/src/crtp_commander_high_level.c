@@ -180,7 +180,7 @@ bool isInGroup(uint8_t g) {
 
 void crtpCommanderHighLevelInit(void)
 {
-  PRINTF("CRTP Commander High Level init\n");
+  // PRINTF("CRTP Commander High Level init\n");
   if (isInit) {
     return;
   }
@@ -196,6 +196,7 @@ void crtpCommanderHighLevelInit(void)
   pos = vzero();
   yaw = 0;
 
+  PRINTF("CRTP Commander running\r\n");
   isInit = true;
 }
 

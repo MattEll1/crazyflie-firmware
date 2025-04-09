@@ -59,7 +59,7 @@
  #define configTICK_RATE_HZ_RAW                  1000
  #define configTICK_RATE_HZ                      ((TickType_t)configTICK_RATE_HZ_RAW)
  #define configMAX_PRIORITIES                    6  /* Keeping Crazyflie's 6 priorities */
- #define configMINIMAL_STACK_SIZE                ((unsigned short)90)  /* iMX93 value, adjust if needed */
+ #define configMINIMAL_STACK_SIZE                ((unsigned short)150)  /* iMX93 value, adjust if needed */
  #define configMAX_TASK_NAME_LEN                 10
  #define configUSE_16_BIT_TICKS                  0
  #define configIDLE_SHOULD_YIELD                 1
@@ -76,7 +76,7 @@
  /* ---- Memory Management ---- */
  #define configSUPPORT_STATIC_ALLOCATION         0
  #define configSUPPORT_DYNAMIC_ALLOCATION        1
- #define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 20 * 1024 ) )
+ #define configTOTAL_HEAP_SIZE                  ( ( size_t ) ( 20 * 1024 ) ) // ( ( size_t ) ( 40 * 1024 ) )
  #define configAPPLICATION_ALLOCATED_HEAP        0
  #define configFRTOS_MEMORY_SCHEME               4  /* Using heap_4.c from iMX93 */
  

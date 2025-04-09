@@ -3667,7 +3667,7 @@ void vTaskStartScheduler( void )
 {
     BaseType_t xReturn;
 
-    PRINTF("vTask: Entering vTaskStartScheduler()\n");
+    // PRINTF("vTask: Entering vTaskStartScheduler()\n");
     traceENTER_vTaskStartScheduler();
 
     #if ( configUSE_CORE_AFFINITY == 1 ) && ( configNUMBER_OF_CORES > 1 )
@@ -3675,25 +3675,25 @@ void vTaskStartScheduler( void )
         /* Sanity check that the UBaseType_t must have greater than or equal to
          * the number of bits as confNUMBER_OF_CORES. */
         configASSERT( ( sizeof( UBaseType_t ) * taskBITS_PER_BYTE ) >= configNUMBER_OF_CORES );
-        priPRINTFntf("vTask: Core affinity check passed\n");
+        // priPRINTFntf("vTask: Core affinity check passed\n");
     }
     #endif /* #if ( configUSE_CORE_AFFINITY == 1 ) && ( configNUMBER_OF_CORES > 1 ) */
 
-    PRINTF("vTask: Creating idle tasks...\n");
+    // PRINTF("vTask: Creating idle tasks...\n");
     xReturn = prvCreateIdleTasks();
-    PRINTF("vTask: Idle tasks creation result: %s\n", (xReturn == pdPASS) ? "SUCCESS" : "FAILED");
+    // PRINTF("vTask: Idle tasks creation result: %s\n", (xReturn == pdPASS) ? "SUCCESS" : "FAILED");
 
     #if ( configUSE_TIMERS == 1 )
     {
         if( xReturn == pdPASS )
         {
-            PRINTF("vTask: Creating timer task...\n");
+            // PRINTF("vTask: Creating timer task...\n");
             xReturn = xTimerCreateTimerTask();
-            PRINTF("vTask: Timer task creation result: %s\n", (xReturn == pdPASS) ? "SUCCESS" : "FAILED");
+            // PRINTF("vTask: Timer task creation result: %s\n", (xReturn == pdPASS) ? "SUCCESS" : "FAILED");
         }
         else
         {
-            PRINTF("vTask: Skipping timer task creation due to idle task failure\n");
+            // PRINTF("vTask: Skipping timer task creation due to idle task failure\n");
             mtCOVERAGE_TEST_MARKER();
         }
     }
@@ -3701,14 +3701,14 @@ void vTaskStartScheduler( void )
 
     if( xReturn == pdPASS )
     {
-        PRINTF("vTask: Task creation successful, proceeding with scheduler start\n");
+        // PRINTF("vTask: Task creation successful, proceeding with scheduler start\n");
         
         /* freertos_tasks_c_additions_init() should only be called if the user
          * definable macro FREERTOS_TASKS_C_ADDITIONS_INIT() is defined, as that is
          * the only macro called by the function. */
         #ifdef FREERTOS_TASKS_C_ADDITIONS_INIT
         {
-            PRINTF("vTask: Calling freertos_tasks_c_additions_init()\n");
+            // PRINTF("vTask: Calling freertos_tasks_c_additions_init()\n");
             freertos_tasks_c_additions_init();
         }
         #endif
@@ -3718,12 +3718,12 @@ void vTaskStartScheduler( void )
          * the created tasks contain a status word with interrupts switched on
          * so interrupts will automatically get re-enabled when the first task
          * starts to run. */
-         PRINTF("vTask: Disabling interrupts before starting scheduler\n");
+        //  PRINTF("vTask: Disabling interrupts before starting scheduler\n");
         portDISABLE_INTERRUPTS();
 
         #if ( configUSE_C_RUNTIME_TLS_SUPPORT == 1 )
         {
-            PRINTF("vTask: Setting TLS block for first task\n");
+            // PRINTF("vTask: Setting TLS block for first task\n");
             /* Switch C-Runtime's TLS Block to point to the TLS
              * block specific to the task that will run first. */
             configSET_TLS_BLOCK( pxCurrentTCB->xTLSBlock );
@@ -3733,18 +3733,18 @@ void vTaskStartScheduler( void )
         xNextTaskUnblockTime = portMAX_DELAY;
         xSchedulerRunning = pdTRUE;
         xTickCount = ( TickType_t ) configINITIAL_TICK_COUNT;
-        PRINTF("vTask: Scheduler variables initialized\n");
+        // PRINTF("vTask: Scheduler variables initialized\n");
 
         /* If configGENERATE_RUN_TIME_STATS is defined then the following
          * macro must be defined to configure the timer/counter used to generate
          * the run time counter time base. */
         #if ( configGENERATE_RUN_TIME_STATS == 1 )
-        PRINTF("vTask: Configuring timer for run time stats\n");
+        // PRINTF("vTask: Configuring timer for run time stats\n");
         #endif
         portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
 
         traceTASK_SWITCHED_IN();
-        PRINTF("vTask: About to call xPortStartScheduler()\n");
+        // PRINTF("vTask: About to call xPortStartScheduler()\n");
 
         /* Setting up the timer tick is hardware specific and thus in the
          * portable interface. */
@@ -3753,7 +3753,7 @@ void vTaskStartScheduler( void )
         ( void ) xPortStartScheduler();
         
         /* If we get here, something went wrong with xPortStartScheduler() */
-        PRINTF("vTask: xPortStartScheduler() returned - this should not happen in normal operation\n");
+        // PRINTF("vTask: xPortStartScheduler() returned - this should not happen in normal operation\n");
 
         /* In most cases, xPortStartScheduler() will not return. If it
          * returns pdTRUE then there was not enough heap memory available
@@ -3764,7 +3764,7 @@ void vTaskStartScheduler( void )
     }
     else
     {
-        PRINTF("vTask: Failed to create necessary tasks for scheduler\n");
+        // PRINTF("vTask: Failed to create necessary tasks for scheduler\n");
         /* This line will only be reached if the kernel could not be started,
          * because there was not enough FreeRTOS heap to create the idle task
          * or the timer task. */

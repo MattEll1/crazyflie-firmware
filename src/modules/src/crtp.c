@@ -84,7 +84,7 @@ static void updateStats();
 
 void crtpInit(void)
 {
-  PRINTF("Starting CRTP init\n");
+  // PRINTF("Starting CRTP init\n");
   if(isInit)
     return;
 
@@ -97,7 +97,7 @@ void crtpInit(void)
               CRTP_RX_TASK_STACKSIZE, NULL, CRTP_RX_TASK_PRI, NULL);
 
   /* Start Rx/Tx tasks */
-  PRINTF("CRTP TX and RX initiated\n");
+  PRINTF("CRTP TX and RX Started\r\n");
 
 
   isInit = true;

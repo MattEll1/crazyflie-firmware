@@ -173,7 +173,7 @@ bool sensorsSimAreCalibrated() {
 
 static void sensorsTask(void *param)
 {
-  PRINTF("Sensors task started\n");
+  // PRINTF("Sensors task started\n");
   systemWaitStart();
 
   CRTPPacket p;
@@ -297,7 +297,7 @@ static void sensorsDeviceInit(void)
 
 static void sensorsTaskInit(void)
 {
-  PRINTF("Sensors sim task init\n");
+  // PRINTF("Sensors sim task init\n");
   // Use to have access to the sensors data
   dataReady = xSemaphoreCreateBinary();
 
@@ -307,6 +307,7 @@ static void sensorsTaskInit(void)
   barometerDataQueue = xQueueCreate(1, sizeof(baro_t));
 
   xTaskCreate(sensorsTask, SENSORS_TASK_NAME, SENSORS_TASK_STACKSIZE, NULL, SENSORS_TASK_PRI, NULL);
+  PRINTF("Simulated Sim Task running\r\n");
 }
 
 

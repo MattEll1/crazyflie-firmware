@@ -61,14 +61,14 @@ void platformInitHardware() {
   // PRINTF("Debug console initialized\n");
 
   //Low level init: Clock and Interrupt controller
-  PRINTF("Initializing NVIC...\n");
+  // PRINTF("Initializing NVIC...\n");
   nvicInit();
-  PRINTF("NVIC initialized\n");
+  // PRINTF("NVIC initialized\n");
 
   //EXTI interrupts
-  PRINTF("Initializing EXTI...\n");
+  // PRINTF("Initializing EXTI...\n");
   extiInit();
-  PRINTF("EXTI initialized\n");
+  // PRINTF("EXTI initialized\n");
 
   //DEBUG_PRINT("iMX93 platform initialized\n");
   PRINTF("iMX93 platform initialized\n");

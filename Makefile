@@ -304,7 +304,13 @@ endif
 # Utilities
 PROJ_OBJ += filter.o cpuid.o cfassert.o  eprintf.o crc.o num.o debug.o
 PROJ_OBJ += version.o FreeRTOS-openocd.o
-PROJ_OBJ += configblockeeprom.o crc_bosch.o
+
+ifeq ($(CPU), imx93m33)
+PROJ_OBJ += configblockeeprom.o  
+else
+PROJ_OBJ += configblockeeprom.o 
+endif
+PROJ_OBJ += crc_bosch.o
 PROJ_OBJ += sleepus.o
 # PROJ_OBJ += pulse_processor.o lighthouse_geometry.o
 

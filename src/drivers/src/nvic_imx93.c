@@ -39,9 +39,11 @@
       
       // Configure SysTick to interrupt at the requested rate
       // The tick rate is already defined in FreeRTOSConfigIMX93.h as 1000Hz
-      SysTick_Config(SystemCoreClock / configTICK_RATE_HZ);
+    //   PRINTF("nvicInit: SystemCoreClock = %d Hz\n", (int)SystemCoreClock);
+      
+    //   SysTick_Config(SystemCoreClock / configTICK_RATE_HZ);
 
-      PRINTF("nvicInit: NVIC initialized with SysTick at %dHz\n", configTICK_RATE_HZ);
+    //   PRINTF("nvicInit: NVIC initialized with SysTick at %dHz\n", configTICK_RATE_HZ);
   }
 
 /**

@@ -1034,9 +1034,9 @@ void SysTick_Handler( void ) /* PRIVILEGED_FUNCTION */
 
 void vPortSVCHandler_C( uint32_t * pulCallerStackAddress ) /* PRIVILEGED_FUNCTION portDONT_DISCARD */
 {
-    PRINTF("Debug: Entered vPortSVCHandler_C\n");
-    PRINTF("Debug: Stack at %p, PC value: 0x%08x\n", 
-           pulCallerStackAddress, pulCallerStackAddress[6]);
+    // PRINTF("Debug: Entered vPortSVCHandler_C\n");
+    // PRINTF("Debug: Stack at %p, PC value: 0x%08x\n", 
+    //        pulCallerStackAddress, pulCallerStackAddress[6]);
     #if ( ( configENABLE_MPU == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ) )
         #if defined( __ARMCC_VERSION )
 

@@ -32,6 +32,7 @@
 
 #include "rpmsg_lite.h"
 #include "rpmsg_platform.h"
+#include "fsl_debug_console.h"
 
 /* Interface which is used to interact with the virtqueue layer,
  * a different interface is used, when the local processor is the MASTER
@@ -183,6 +184,7 @@ static void rpmsg_lite_tx_callback(struct virtqueue *vq)
     RL_ASSERT(rpmsg_lite_dev != RL_NULL);
     rpmsg_lite_dev->link_state = 1U;
     env_tx_callback(rpmsg_lite_dev->link_id);
+    PRINTF("rpmsg_lite_tx_callback: Setting link_state to 1, link_id=%d\n", rpmsg_lite_dev->link_id);
 }
 
 /****************************************************************************

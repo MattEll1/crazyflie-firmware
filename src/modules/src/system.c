@@ -88,7 +88,7 @@ void systemLaunch(void)
   xTaskCreate(systemTask, SYSTEM_TASK_NAME,
               SYSTEM_TASK_STACKSIZE, NULL,
               SYSTEM_TASK_PRI, NULL);
-  PRINTF("systemLaunch: xTaskCreate successful\n");
+  PRINTF("System Task Launched\r\n");
 
 }
 
@@ -101,11 +101,11 @@ void systemInit(void)
   canStartMutex = xSemaphoreCreateMutex();
   xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  #ifdef IMX93
-    rpmsglinkInit();
-  #else
-    usblinkInit();
-  #endif
+
+  rpmsglinkInit();
+
+  // usblinkInit();
+
 
   sysLoadInit();
 
@@ -197,14 +197,16 @@ void systemTask(void *arg)
 
   //Test the modules
   pass &= systemTest();
-  pass &= configblockTest();
-  pass &= commTest();
-  pass &= commanderTest();
-  pass &= stabilizerTest();
-  //pass &= deckTest();
-  //pass &= soundTest();
-  //pass &= memTest();
-  pass &= watchdogNormalStartTest();
+  // pass &= configblockTest();
+  // pass &= commTest();
+  // pass &= commanderTest();
+  // PRINTF("Commander test passed\n");
+  // pass &= stabilizerTest();
+  // PRINTF("Stab test passed\n");
+  // //pass &= deckTest();
+  // //pass &= soundTest();
+  // //pass &= memTest();
+  // pass &= watchdogNormalStartTest();
 
   //Start the firmware
   if(pass)

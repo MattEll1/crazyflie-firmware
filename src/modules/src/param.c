@@ -36,6 +36,7 @@
 #include "crc.h"
 #include "console.h"
 #include "debug.h"
+#include "fsl_debug_console.h"
 
 #if 0
 #define PARAM_DEBUG(fmt, ...) DEBUG_PRINT("D/param " fmt, ## __VA_ARGS__)
@@ -142,7 +143,7 @@ void paramInit(void)
 	            PARAM_TASK_STACKSIZE, NULL, PARAM_TASK_PRI, NULL);
 
   //TODO: Handle stored parameters!
-
+  PRINTF("Parameter Task running\r\n");
   isInit = true;
 }
 

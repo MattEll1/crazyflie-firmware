@@ -52,6 +52,7 @@
 #include "virtqueue.h"
 #include "event_groups.h"
 #include "rpmsg_lite.h"
+#include "fsl_debug_console.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -126,12 +127,12 @@ static int32_t env_in_isr(void)
  */
 uint32_t env_wait_for_link_up(volatile uint32_t *link_state, uint32_t link_id, uint32_t timeout_ms)
 {
-    //PRINTF("env_wait_for_link_up: link_id = %d, timeout_ms = %d\r\n", link_id, timeout_ms);
+    // PRINTF("env_wait_for_link_up: link_id = %d, timeout_ms = %d\r\n", link_id, timeout_ms);
 
     (void)xEventGroupClearBits(event_group, (EventBits_t)(1UL << link_id));
     if (*link_state != 1U)
     {
-        // PRINTF("if (*link_state != 1U)");
+        // PRINTF("if (*link_state != 1U)\n");
         // PRINTF("link_state = %d\r\n", *link_state);
         EventBits_t uxBits;
         uxBits = xEventGroupWaitBits(event_group, (EventBits_t)(1UL << link_id), pdFALSE, pdTRUE,
@@ -151,7 +152,7 @@ uint32_t env_wait_for_link_up(volatile uint32_t *link_state, uint32_t link_id, u
     else
     {
         // PRINTF("else");
-        // PRINTF("link_state = %d\r\n", *link_state);
+        PRINTF("link_state = %d\r\n", *link_state);
         return 1U;
     }
 }
@@ -699,12 +700,15 @@ uint64_t env_get_timestamp(void)
 
 void env_isr(uint32_t vector)
 {
+    // PRINTF("env_isr: START with vector_id=%d\n", vector);
     struct isr_info *info;
     RL_ASSERT(vector < ISR_COUNT);
     if (vector < ISR_COUNT)
     {
+        // PRINTF("env_isr: Entered if statement");
         info = &isr_table[vector];
         virtqueue_notification((struct virtqueue *)info->data);
+        // PRINTF("env_isr: END with vector_id=%d, vq=%p\n", vector, info ? info->data : NULL);
     }
 }
 

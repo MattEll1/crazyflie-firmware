@@ -23,8 +23,7 @@
 #include "fsl_debug_console.h"
 
 // RPMsg specific definitions
-#define RPMSG_ENDPOINT_ADDR       (40)
-#define RPMSG_CHANNEL_NAME        "rpmsg-crazyflie-channel"
+#define RPMSG_ENDPOINT_ADDR       (30)
 
 static bool isInit = false;
 static xQueueHandle crtpPacketDelivery;
@@ -77,9 +76,71 @@ static int32_t rpmsg_recv_callback(void *payload, uint32_t payload_len, uint32_t
 }
 
 static void rpmsglinkTask(void *param) {
+  // PRINTF("RPMSGLINK: entered!\n");
   char buffer[64];  // Local buffer for received data
   char *received_data = buffer;
   uint32_t src, size;
+  // PRINTF("RPMSGLINK: vars made! going into initilisation\n");
+
+  // Initialize the RPMsg system
+  rpmsg_instance = rpmsg_lite_remote_init(
+      (void*)RPMSG_LITE_SHMEM_BASE, 
+      RPMSG_LITE_LINK_ID,
+      RL_NO_FLAGS);
+      
+  if (!rpmsg_instance) {
+    PRINTF("RPMSGLINK: Failed to initialize RPMsg instance!\n");
+    return; // Failed to initialize RPMsg
+  }
+  
+  PRINTF("RPMSGLINK: RPMsg instance created successfully\n");
+  
+  PRINTF("RPMSGLINK: Waiting for A55 core link up...\r\n");
+  // Wait for the A55 core to be ready
+  // rpmsg_instance->link_state = 1;
+  // extern void env_tx_callback(uint32_t link_id);
+  // env_tx_callback(RPMSG_LITE_LINK_ID);
+
+  rpmsg_lite_wait_for_link_up(rpmsg_instance, RL_BLOCK);
+  PRINTF("RPMSGLINK: A55 core is now ready\n");
+  
+  // Create RPMsg queue
+  // PRINTF("RPMSGLINK: Creating RPMsg queue\n");
+  rpmsg_queue = rpmsg_queue_create(rpmsg_instance);
+  if (!rpmsg_queue) {
+    // PRINTF("RPMSGLINK: Failed to create RPMsg queue!\n");
+    return; // Failed to create queue
+  }
+  // PRINTF("RPMSGLINK: RPMsg queue created successfully\n");
+  
+  // Create RPMsg endpoint
+  // PRINTF("RPMSGLINK: Creating endpoint with address %d\n", RPMSG_ENDPOINT_ADDR);
+  rpmsg_endpoint = rpmsg_lite_create_ept(
+      rpmsg_instance, 
+      RPMSG_ENDPOINT_ADDR,
+      rpmsg_recv_callback,
+      rpmsg_queue);
+      
+  if (!rpmsg_endpoint) {
+    // PRINTF("RPMSGLINK: Failed to create RPMsg endpoint!\n");
+    return; // Failed to create endpoint
+  }
+  // PRINTF("RPMSGLINK: RPMsg endpoint created successfully\n");
+  
+  // Announce our service to the other core
+  // PRINTF("RPMSGLINK: Announcing service '%s'\n", RPMSG_LITE_NS_ANNOUNCE_STRING);
+  rpmsg_ns_announce(rpmsg_instance, rpmsg_endpoint, 
+                    RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
+  
+  // Create CRTP packet delivery queue
+  // PRINTF("RPMSGLINK: Creating CRTP packet delivery queue\n");
+  crtpPacketDelivery = xQueueCreate(5, sizeof(CRTPPacket));
+  DEBUG_QUEUE_MONITOR_REGISTER(crtpPacketDelivery);
+
+  // PRINTF("RPMSGLINK: Setting as default CRTP link\n");
+  crtpSetLink(rpmsglinkGetLink());
+  
+  PRINTF("RPMSGLINK: Initialization complete\r\n");
   
   while (1) {
     // Block waiting for data from RPMsg
@@ -193,76 +254,28 @@ static int rpmsglinkSetEnable(bool enable) {
 // }
 
 void rpmsglinkInit() {
-    PRINTF("RPMSGLINK: Starting initialization\n");
+    // PRINTF("RPMSGLINK: Starting initialization\n");
     
     if (isInit) {
-      PRINTF("RPMSGLINK: Already initialized, skipping\n");
+      // PRINTF("RPMSGLINK: Already initialized, skipping\n");
       return;
-    }
-    
-    PRINTF("RPMSGLINK: Creating RPMsg instance with SHMEM_BASE=0x%X, LINK_ID=%d\n", 
-           (unsigned int)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID);
-    
-    // Initialize the RPMsg system
-    rpmsg_instance = rpmsg_lite_remote_init(
-        (void*)RPMSG_LITE_SHMEM_BASE, 
-        RPMSG_LITE_LINK_ID,
-        RL_NO_FLAGS);
-        
-    if (!rpmsg_instance) {
-      PRINTF("RPMSGLINK: Failed to initialize RPMsg instance!\n");
-      return; // Failed to initialize RPMsg
-    }
-    
-    PRINTF("RPMSGLINK: RPMsg instance created successfully\n");
-    
-    PRINTF("RPMSGLINK: Waiting for A55 core link up...\n");
-    // Wait for the A55 core to be ready
-    rpmsg_lite_wait_for_link_up(rpmsg_instance, RL_BLOCK);
-    PRINTF("RPMSGLINK: A55 core is now ready\n");
-    
-    // Create RPMsg queue
-    PRINTF("RPMSGLINK: Creating RPMsg queue\n");
-    rpmsg_queue = rpmsg_queue_create(rpmsg_instance);
-    if (!rpmsg_queue) {
-      PRINTF("RPMSGLINK: Failed to create RPMsg queue!\n");
-      return; // Failed to create queue
-    }
-    PRINTF("RPMSGLINK: RPMsg queue created successfully\n");
-    
-    // Create RPMsg endpoint
-    PRINTF("RPMSGLINK: Creating endpoint with address %d\n", RPMSG_ENDPOINT_ADDR);
-    rpmsg_endpoint = rpmsg_lite_create_ept(
-        rpmsg_instance, 
-        RPMSG_ENDPOINT_ADDR,
-        rpmsg_recv_callback,
-        rpmsg_queue);
-        
-    if (!rpmsg_endpoint) {
-      PRINTF("RPMSGLINK: Failed to create RPMsg endpoint!\n");
-      return; // Failed to create endpoint
-    }
-    PRINTF("RPMSGLINK: RPMsg endpoint created successfully\n");
-    
-    // Announce our service to the other core
-    PRINTF("RPMSGLINK: Announcing service '%s'\n", RPMSG_CHANNEL_NAME);
-    rpmsg_ns_announce(rpmsg_instance, rpmsg_endpoint, 
-                     RPMSG_CHANNEL_NAME, RL_NS_CREATE);
-    
+    }    
+   
     // Create CRTP packet delivery queue
-    PRINTF("RPMSGLINK: Creating CRTP packet delivery queue\n");
+    // PRINTF("RPMSGLINK: Creating CRTP packet delivery queue\n");
     crtpPacketDelivery = xQueueCreate(5, sizeof(CRTPPacket));
     DEBUG_QUEUE_MONITOR_REGISTER(crtpPacketDelivery);
     
     // Create a task to handle RPMsg communication
     PRINTF("RPMSGLINK: Creating RPMsg task\n");
-    xTaskCreate(rpmsglinkTask, RPMSGLINK_TASK_NAME,
-                RPMSGLINK_TASK_STACKSIZE, NULL, RPMSGLINK_TASK_PRI, NULL);
-    
-    PRINTF("RPMSGLINK: Setting as default CRTP link\n");
-    crtpSetLink(rpmsglinkGetLink());
-    
-    PRINTF("RPMSGLINK: Initialization complete\n");
+    if (xTaskCreate(rpmsglinkTask, RPMSGLINK_TASK_NAME, RPMSGLINK_TASK_STACKSIZE, NULL, RPMSGLINK_TASK_PRI, NULL) != pdPASS) {
+        PRINTF("RPMSGLINK: Failed to create RPMsg task\n");
+        for (;;);
+    }  
+    // xTaskCreate(rpmsglinkTask, RPMSGLINK_TASK_NAME,
+    //             RPMSGLINK_TASK_STACKSIZE, NULL, RPMSGLINK_TASK_PRI, NULL);    
+
+    PRINTF("RPMSGLINK Task running\r\n");
     isInit = true;
 }
 

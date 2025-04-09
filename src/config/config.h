@@ -124,22 +124,26 @@
 
 
 // Task names
+//Needed for core firmware functionality
 #define SYSTEM_TASK_NAME        "SYSTEM"
-#define ADC_TASK_NAME           "ADC"
-#define PM_TASK_NAME            "PWRMGNT"
 #define CRTP_TX_TASK_NAME       "CRTP-TX"
 #define CRTP_RX_TASK_NAME       "CRTP-RX"
 #define CRTP_RXTX_TASK_NAME     "CRTP-RXTX"
-#define LOG_TASK_NAME           "LOG"
-#define MEM_TASK_NAME           "MEM"
 #define PARAM_TASK_NAME         "PARAM"
 #define SENSORS_TASK_NAME       "SENSORS"
 #define STABILIZER_TASK_NAME    "STABILIZER"
+#define RPMSGLINK_TASK_NAME     "RPMSGLINK"
+#define CMD_HIGH_LEVEL_TASK_NAME "CMDHL"
+
+//Not needed for core firmware functionality
+#define ADC_TASK_NAME           "ADC"
+#define PM_TASK_NAME            "PWRMGNT"
+#define LOG_TASK_NAME           "LOG"
+#define MEM_TASK_NAME           "MEM"
 #define NRF24LINK_TASK_NAME     "NRF24LINK"
 #define ESKYLINK_TASK_NAME      "ESKYLINK"
 #define SYSLINK_TASK_NAME       "SYSLINK"
 #define USBLINK_TASK_NAME       "USBLINK"
-#define RPMSGLINK_TASK_NAME     "RPMSGLINK"
 #define PROXIMITY_TASK_NAME     "PROXIMITY"
 #define EXTRX_TASK_NAME         "EXTRX"
 #define UART_RX_TASK_NAME       "UART"
@@ -149,7 +153,6 @@
 #define USDLOG_TASK_NAME        "USDLOG"
 #define USDWRITE_TASK_NAME      "USDWRITE"
 #define PCA9685_TASK_NAME       "PCA9685"
-#define CMD_HIGH_LEVEL_TASK_NAME "CMDHL"
 #define MULTIRANGER_TASK_NAME   "MR"
 #define VERIF_TASK_NAME         "VERIF"
 
